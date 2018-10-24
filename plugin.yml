@@ -1,0 +1,23 @@
+name: MemFree
+description: MemFree
+main: cn.whiteg.memfree.MemFree
+version: 1.0.1
+author: MoeWhite
+softdepend: []
+commands:
+  memfree:
+   description: MyPlug
+   aliases: mf
+permissions:
+  whiteg.*:
+    description: MyplugPer
+    default: op
+    children:
+      whiteg.reload: true
+      whiteg.test: true
+  whiteg.reload:
+    description: Reload
+    default: op
+  whiteg.test:
+    description: Test
+    default: op
