@@ -20,38 +20,43 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 
 public class CommandManager implements CommandExecutor, TabCompleter {
 
-    public boolean onCommand(CommandSender paramCommandSender,Command paramCommand,String paramString,String[] paramArrayOfString) {
+    public boolean onCommand(CommandSender sender,Command Command,String paramString,String[] paramArrayOfString) {
 
-        if (!paramCommand.getName().equalsIgnoreCase("MemFree")) {
+        if (!Command.getName().equalsIgnoreCase("MemFree")) {
             return false;
         }
         boolean is = MemFree.in().timer.getTimer();
+        //Player player = Bukkit.getPlayerExact(paramCommandSender.getName());
         if (paramArrayOfString.length != 1) {
-            paramCommandSender.sendMessage("MemFree by 某白");
+            sender.sendMessage("§bMemFree §2by §f某白");
             if (is){
-                paramCommandSender.sendMessage("当前计时器§a已启用");
+                sender.sendMessage("§b当前计时器§a已启用");
             }else {
-                paramCommandSender.sendMessage("当前计时器§7未启用");
+                sender.sendMessage("§b当前计时器§7未启用");
             }
+            long max = Runtime.getRuntime().maxMemory();
+            long use = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            long free = max - use;
+            long minfree = MemFree.in().minfree;
+            sender.sendMessage("§b最小内存§3:§r " + minfree / 1024 / 1024 + "MB");
+            sender.sendMessage("§b剩余内存§3:§r " + free / 1024 / 1024 + "MB");
+
             return true;
         }
-        Player localPlayer = Bukkit.getPlayerExact(paramCommandSender.getName());
         if (paramArrayOfString[0].equalsIgnoreCase("reload")) {
-            if ((!paramCommandSender.hasPermission("whiteg.reload")) || (!paramCommandSender.isOp())) {
-                paramCommandSender.sendMessage("阁下没有权限使用这个指令");
+            if ((!sender.hasPermission("whiteg.reload")) || (!sender.isOp())) {
+                sender.sendMessage("§b阁下没有权限使用这个指令");
                 return true;
             }
             MemFree.in().reloadConfig();
             MemFree.in().minfree = MemFree.in().getConfig().getLong("minfree") * 1024 * 1024;
-            paramCommandSender.sendMessage("重载");
+            sender.sendMessage("§b重载");
             MemFree.in().timer.stopTimer();
             MemFree.in().timer.setTimer();
             return true;
         }
-        Object localObject1;
-        Object localObject2;
         if (paramArrayOfString[0].equalsIgnoreCase("toggle")) {
-            if (paramCommandSender.hasPermission("whiteg.set")) {
+            if (sender.hasPermission("whiteg.set")) {
                 if (is){
                     MemFree.in().timer.stopTimer();
                 }else{
@@ -59,7 +64,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 }
                 return true;
             } else {
-                paramCommandSender.sendMessage("阁下没有权限");
+                sender.sendMessage("§b阁下没有权限使用这个指令");
                 return true;
             }
         }  else {
