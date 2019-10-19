@@ -1,16 +1,44 @@
 #配置版本号
 var: 1
+debug: false
+
+Auto_Restart: false
 #最小内存（单位MB）
-minfree: 256
+minfree: 128
+
+#最小TPS
+mintps: 7
+#最大警告次数(超过后重启)
+MaxWarins: 30
+
 #检测间隔 （单位 秒）
-runTick: 25
+runTick: 5
+
 #内存小于设定的值时执行
 commands:
-  - "say §b 服务器内存满啦,需要重启释放内存."
-  - "say §b 服务器将在5秒后重启"
+- "say §b 服务器内存满啦,需要重启释放内存."
+- "say §b 服务器将在5秒后重启"
+- "mf toggle"
 #延迟(单位 秒)
 onTime: 5
 #延迟执行指令
 onCommands:
-  - "kickall &f服务器需要重启释放内存,请等待30秒服务器重启完成后再加入服务器. 期待与您再见."
-  - "restart"
+           - "kickall &f服务器需要重启释放内存,\n请等待1分钟服务器重启完成后再加入服务器. \n§l期待与您再见."
+           - "restart"
+#在线多少人开始限制烟花或者三叉戟加速鞘翅
+limElytra: 0
+MaxSpawn:
+  Enable: false
+  Range: 32
+  MaxAllEntity: 128
+  DefMaxEntity: 20
+  MaxEntity:
+    VILLAGER: 12
+    DROPPED_ITEM: 128
+    CHICKEN: 12
+    PIG: 12
+    COW: 12
+    SHEEP: 12
+    ITEM_FRAME: 128
+    ARMOR_STAND: 128
+    DOLPHIN: 3

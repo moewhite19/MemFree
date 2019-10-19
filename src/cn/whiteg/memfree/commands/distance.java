@@ -1,0 +1,75 @@
+package cn.whiteg.memfree.commands;
+
+import cn.whiteg.memfree.utils.MonitorUtil;
+import cn.whiteg.mmocore.CommandInterface;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class distance extends CommandInterface {
+
+    @Override
+    public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
+
+        if (!sender.hasPermission("memfree.gc")){
+            sender.sendMessage("没有权限");
+            return true;
+        }
+        if (args.length == 1){
+            for (World world : Bukkit.getWorlds()) {
+                int ints = MonitorUtil.getDistance(world);
+                sender.sendMessage(world.getName() + "§b区块可见距离为§r" + ints);
+            }
+        } else if (args.length == 2){
+            int vd;
+            try{
+                vd = Integer.valueOf(args[1]);
+                sender.sendMessage("所有世界视距已更新");
+            }catch (Exception e){
+                //e.printStackTrace();
+                sender.sendMessage("参数无效");
+                return true;
+            }
+            MonitorUtil.setDistance(vd);
+        } else if (args.length == 3){
+            World world = Bukkit.getWorld(args[1]);
+            int vd;
+            if (world == null){
+                sender.sendMessage("找不到世界");
+                return true;
+            }
+            try{
+                vd = Integer.valueOf(args[2]);
+                //sender.sendMessage("已修改视距为" + vd + "实体可见范围为" + ed);
+            }catch (Exception e){
+                //e.printStackTrace();
+                sender.sendMessage("参数无效");
+                return true;
+            }
+            MonitorUtil.setDistance(world,vd);
+            sender.sendMessage("世界视距已更新");
+
+        } else {
+            sender.sendMessage("无效参数");
+        }
+        return true;
+    }
+
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender,Command cmd,String label,String[] args) {
+        if (args.length == 1){
+            List<String> worlds = new ArrayList<>();
+            for (World world : Bukkit.getWorlds()) {
+                worlds.add(world.getName());
+
+            }
+            return getMatches(worlds,args);
+        }
+        return null;
+    }
+}
