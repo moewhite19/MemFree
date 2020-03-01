@@ -1,44 +1,65 @@
 #配置版本号
 var: 1
 debug: false
-
-Auto_Restart: false
+Auto_Restart: true
+MaxWaring: 25
 #最小内存（单位MB）
-minfree: 128
+minfree: 256
 
 #最小TPS
-mintps: 7
-#最大警告次数(超过后重启)
-MaxWarins: 30
-
+mintps: 8
 #检测间隔 （单位 秒）
-runTick: 5
-
+runTick: 1
 #内存小于设定的值时执行
 commands:
 - "say §b 服务器内存满啦,需要重启释放内存."
 - "say §b 服务器将在5秒后重启"
-- "mf toggle"
 #延迟(单位 秒)
 onTime: 5
 #延迟执行指令
 onCommands:
-           - "kickall &f服务器需要重启释放内存,\n请等待1分钟服务器重启完成后再加入服务器. \n§l期待与您再见."
-           - "restart"
-#在线多少人开始限制烟花或者三叉戟加速鞘翅
-limElytra: 0
-MaxSpawn:
-  Enable: false
+- "kick @a &f服务器似乎内存满了,\n请等待1分钟服务器重启完成后再加入服务器. \n§l期待与您再见."
+- "restart"
+
+limElytra: 15
+
+#自动GC
+AutoGC:
+  Enable: true
+  #最小危险值
+  minWarin: 3
+  #最小回收间隔 单位：秒
+  minTick: 360
+
+
+
+#区块实体生成限制器
+MaxEntity:
+  Enable: true
+  #用清理AI代替移除
+  ClearAI: true
   Range: 32
-  MaxAllEntity: 128
-  DefMaxEntity: 20
-  MaxEntity:
-    VILLAGER: 12
-    DROPPED_ITEM: 128
-    CHICKEN: 12
-    PIG: 12
-    COW: 12
-    SHEEP: 12
+  DefMaxEntity: 32
+  Entitys:
+    DROPPED_ITEM: 512
     ITEM_FRAME: 128
     ARMOR_STAND: 128
-    DOLPHIN: 3
+    VILLAGER: 30
+    IRON_GOLEM: 16
+    CHICKEN: 16
+    PIG: 16
+    COW: 16
+    CAT: 16
+    WOLF: 16
+    SHEEP: 16
+    TURTLE: 16
+    BEE: 26
+    DOLPHIN: 26
+    ZOMBIE: 26
+    PILLAGER: 26
+    ARROW: 64
+    BAT: 16
+    SKELETON: 26
+    CREEPER: 26
+    ENDERMAN: 26
+    

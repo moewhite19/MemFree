@@ -1,34 +1,38 @@
 package cn.whiteg.memfree;
 
-import cn.whiteg.memfree.Listener.EntitySpawn;
 import cn.whiteg.memfree.Listener.limElytra;
-import cn.whiteg.mmocore.MMOCore;
 import cn.whiteg.mmocore.util.PluginUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import static cn.whiteg.memfree.Setting.*;
 
 public class MemFree extends JavaPlugin {
-    static long runtime = 0;
-    public final MFRunnable timer = new MFRunnable(this);
     public static Logger logger;
     public static MemFree plugin;
+    static long runtime = 0;
+    public final MFRunnable timer = new MFRunnable(this);
     public final Map<String, Listener> listenerMap = new HashMap<>();
     public CommandManage mainCmd;
     public SubCommand subCmds;
-    public MemFree(){
+
+    public MemFree() {
         plugin = this;
     }
+
     public void onLoad() {
         //getLogger().info("加载配置文件");
         saveDefaultConfig();
@@ -38,7 +42,7 @@ public class MemFree extends JavaPlugin {
 
     public void onEnable() {
         logger = getLogger();
-        //exitev = new playerexit();
+        //exitev = new PlayerListener();
         //Bukkit.getPluginManager().registerEvents(this.exitev,this);
         //getLogger().info("注册指令");
         mainCmd = new CommandManage();
@@ -46,11 +50,12 @@ public class MemFree extends JavaPlugin {
         mfcmd.setExecutor(mainCmd);
         mfcmd.setTabCompleter(mainCmd);
         //regEven(new antiRedstone());
+//        regEven(new PlayerListener());
         Setting.reload();
         if (Setting.limElytra > 0) regEven(new limElytra());
-        if (getConfig().getBoolean("MaxSpawn.Enable")){
-            regEven(new EntitySpawn());
-        }
+//        if (MaxEntity != null){
+//            regEven(new EntitySpawn());
+//        }
         if (DEBUG) getLogger().info("启用计时器");
         if (runtime == 0) runtime = ManagementFactory.getRuntimeMXBean().getStartTime();
         logger.info("已启用");
@@ -77,29 +82,63 @@ public class MemFree extends JavaPlugin {
     }
 
     public void regEven(Listener listener) {
-        String key = listener.getClass().getName();
-        logger.info("注册事件:" + key);
+        regEven(listener.getClass().getName(),listener);
+    }
+
+    public void regEven(String key,Listener listener) {
+        listenerMap.put(key,listener);
         Bukkit.getPluginManager().registerEvents(listener,plugin);
     }
 
     public void unregEven() {
-        for (Map.Entry<String, Listener> entry : listenerMap.entrySet()) {
-            unregEven(entry.getKey());
+        Iterator<Map.Entry<String, Listener>> it = listenerMap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, Listener> set = it.next();
+            Listener listener = set.getValue();
+            if (listener != null){
+                unregListener(listener);
+            }
         }
     }
 
+    /**
+     * 卸载事件
+     *
+     * @param Key "卸载"
+     */
     public void unregEven(String Key) {
-        if (listenerMap.get(Key) == null){
+        Listener listenr = listenerMap.remove(Key);
+        if (listenr == null){
             return;
         }
-        Listener evens = listenerMap.get(Key);
+        unregListener(listenr);
+    }
+
+    public void unregListener(Listener listener) {
+        //注销事件
+        Class listenerClass = listener.getClass();
         try{
-            Class c = evens.getClass();
-            Method unreg = c.getDeclaredMethod("unreg");
-            unreg.setAccessible(true);
-            unreg.invoke(evens);
-        }catch (SecurityException | IllegalArgumentException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e){
+            for (Method method : listenerClass.getMethods()) {
+                if (method.isAnnotationPresent(EventHandler.class)){
+                    Type[] tpyes = method.getGenericParameterTypes();
+                    if (tpyes.length == 1){
+                        Class<?> tc = Class.forName(tpyes[0].getTypeName());
+                        Method tm = tc.getMethod("getHandlerList");
+                        HandlerList handlerList = (HandlerList) tm.invoke(null);
+                        handlerList.unregister(listener);
+                    }
+                }
+            }
+        }catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | ClassNotFoundException e){
             e.printStackTrace();
+        }
+
+        //调用类中的unreg()方法
+        try{
+            Method unreg = listenerClass.getDeclaredMethod("unreg");
+            unreg.setAccessible(true);
+            unreg.invoke(listener);
+        }catch (Exception e){
         }
     }
 }

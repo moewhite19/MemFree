@@ -1,9 +1,13 @@
 package cn.whiteg.memfree;
 
+import cn.whiteg.memfree.utils.MonitorUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.*;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.EnumMap;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -38,6 +42,8 @@ public class MFRunnable {
             getLogger().info("启动计时器");
             isTimer = true;
             Runer = new BukkitRunnable() {
+                Iterator<? extends Player> it = null;
+
                 @Override
                 public void run() {
                     //getLogger().info("运行次数" + i++);
@@ -48,6 +54,45 @@ public class MFRunnable {
                     date = System.currentTimeMillis();
                     //Mem = (Mem + free) / 2;
                     tps = runTick * 1000 / ((float) runTime) * 20;
+                    if (Setting.MaxEntity != null){
+                        if (it != null && it.hasNext()){
+                            Player player = it.next();
+                            if (!player.isOnline() || player.isDead()) return;
+                            List<Entity> entitys = player.getNearbyEntities(Setting.MaxSpawn_Range,Setting.MaxSpawn_Range,Setting.MaxSpawn_Range);
+                            if (Setting.clearAI){
+                                EnumMap<EntityType, Integer> map = new EnumMap<>(EntityType.class);
+                                for (Entity e : entitys) {
+                                    if (e instanceof Mob){
+                                        LivingEntity le = (LivingEntity) e;
+                                        EntityType type = e.getType();
+                                        if (type == EntityType.PLAYER) continue;
+                                        Integer lim = Setting.MaxEntity.getOrDefault(type,Setting.DefMaxEntity);
+                                        Integer i = map.getOrDefault(type,0) + 1;
+                                        map.put(type,i);
+                                        if (i > lim){
+                                            MonitorUtil.clearEntityAI((Mob) e);
+                                        }
+                                    }
+                                }
+                            } else {
+                                EnumMap<EntityType, Integer> map = new EnumMap<>(EntityType.class);
+                                for (Entity e : entitys) {
+                                    EntityType type = e.getType();
+                                    if (type == EntityType.PLAYER) continue;
+                                    Integer lim = Setting.MaxEntity.getOrDefault(type,Setting.DefMaxEntity);
+                                    Integer i = map.getOrDefault(type,0) + 1;
+                                    if (i > lim){
+                                        e.remove();
+                                    } else {
+                                        map.put(type,i);
+                                    }
+                                }
+                            }
+
+                        } else {
+                            it = Bukkit.getOnlinePlayers().iterator();
+                        }
+                    }
                     //getLogger().info("最小内存" + minfree / 1024 / 1024);
                     //getLogger().info("剩余内存" + free / 1024 / 1024);
                 }
@@ -85,7 +130,7 @@ public class MFRunnable {
                             if (Setting.DEBUG) MemFree.logger.info("内存警告");
                             warin++;
                             long now = System.currentTimeMillis();
-                            if (warin > 3 && (now - lastGcTime) > 3600000L){
+                            if (Setting.autoGc && warin > Setting.gcMinWarin && (now - lastGcTime) > Setting.gcMinTick){
                                 lastGcTime = now;
                                 Bukkit.broadcastMessage("服务器开始强制回收内存,可能会有短暂卡顿");
                                 long n = System.currentTimeMillis();
@@ -94,6 +139,7 @@ public class MFRunnable {
                                 System.gc();
                                 long now_m = r.freeMemory() - m;
                                 Bukkit.broadcastMessage("内存回收完成,回收了" + now_m / 1024 / 1024 + "MB内存 耗时" + (System.currentTimeMillis() - n) + "ms");
+                                warin = 0;
                                 continue;
                             }
                             if (warin > maxwarin){
@@ -113,6 +159,7 @@ public class MFRunnable {
                 }
             });
             mfThread.setName("MemFreeTimer");
+            mfThread.setDaemon(true);
             mfThread.start();
         }
     }

@@ -62,14 +62,15 @@ public class distance extends CommandInterface {
 
     @Override
     public List<String> onTabComplete(CommandSender sender,Command cmd,String label,String[] args) {
-        if (args.length == 1){
-            List<String> worlds = new ArrayList<>();
-            for (World world : Bukkit.getWorlds()) {
-                worlds.add(world.getName());
-
-            }
-            return getMatches(worlds,args);
+        if (!sender.hasPermission("memfree.gc")){
+            sender.sendMessage("没有权限");
+            return null;
         }
-        return null;
+        List<String> worlds = new ArrayList<>();
+        for (World world : Bukkit.getWorlds()) {
+            worlds.add(world.getName());
+
+        }
+        return getMatches(worlds,args);
     }
 }

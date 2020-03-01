@@ -18,7 +18,7 @@ public class CommandManage extends CommandInterface {
     public List<String> AllCmd;
 
     public CommandManage() {
-        AllCmd = Arrays.asList("reload","clear","toggle","gc","onrestart","shell","monitor","distance","pdistance","test");
+        AllCmd = Arrays.asList("reload","clearchunk","clearmap","toggle","gc","onrestart","shell","monitor","distance","pdistance","test");
         for (int i = 0; i < AllCmd.size(); i++) {
             try{
                 Class c = Class.forName("cn.whiteg.memfree.commands." + AllCmd.get(i));
@@ -101,7 +101,7 @@ public class CommandManage extends CommandInterface {
         final long dt = ser.getWorldContainer().getTotalSpace();
         final long du = ser.getWorldContainer().getUsableSpace();
         final long duse = dt - du;
-        sender.sendMessage("§b磁盘空间§3:§f " + dfg(dt) + "-" + dfg(duse) + "=" + dfg(du));
+        sender.sendMessage("§b磁盘空间§3:§f " + dfg(dt) + " §7- §f" + dfg(duse) + " §7= §f" + dfg(du));
         if (sender.hasPermission("memfree.moe")){
             for (World world : Bukkit.getWorlds()) {
                 Chunk[] chunk = world.getLoadedChunks();
@@ -152,7 +152,7 @@ public class CommandManage extends CommandInterface {
     }
 
     String dfg(long l) {
-        if (l <= 0) return "NaN";
+        if (l < 0) return "NaN";
         final double k = 1024D;
         final DecimalFormat df = new DecimalFormat("#.00");
         if (l <= k){

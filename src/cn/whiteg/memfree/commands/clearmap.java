@@ -1,0 +1,96 @@
+package cn.whiteg.memfree.commands;
+
+import cn.whiteg.mmocore.CommandInterface;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+public class clearmap extends CommandInterface {
+    public static List<File> fileList = null;
+
+
+    @Override
+    public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
+
+        if (!sender.hasPermission("whiteg.test")){
+            sender.sendMessage("没有权限");
+            return true;
+        }
+        if (args.length == 2){
+            String sta = args[1];
+            if (sta.equals("confirm")){
+                if (fileList == null){
+                    return false;
+                }
+                int done = 0;
+                for (File f : fileList) {
+                    if (f.exists()){
+                        String name = f.getName();
+                        try{
+                            f.delete();
+                            File poidir = new File(f.getParentFile(),"poi");
+                            if (poidir.isDirectory()){
+                                File poi = new File(poidir,name);
+                                if (poi.exists()) poi.delete();
+                            }
+                            done++;
+                        }catch (Exception e){
+                            sender.sendMessage("清理失败" + name);
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                sender.sendMessage("已清理 " + done + " 个地图文件");
+            } else {
+                sender.sendMessage("清理地图文件");
+                double day;
+                try{
+                    day = Double.valueOf(args[1]);
+                }catch (NumberFormatException e){
+                    sender.sendMessage("无效数值");
+                    return false;
+                }
+                fileList = new ArrayList<>();
+                File dataDir = new File("world" + File.separator + "data");
+                if (!dataDir.isDirectory()){
+                    sender.sendMessage("找不到world世界文件夹");
+                    return false;
+                }
+                for (File f : dataDir.listFiles()) {
+                    if (f.isDirectory() || !f.getName().startsWith("map_")) continue;
+                    long now = System.currentTimeMillis();
+                    long modified = f.lastModified();
+                    long differenceValue = now - modified;
+                    long maxDifference = Math.round(day * 86400000);
+//            double d = Math.round((double) differenceValue / 86400000);
+                    if (differenceValue >= maxDifference){
+                        fileList.add(f);
+                    }
+                }
+                if (fileList.isEmpty()){
+                    sender.sendMessage("没有找到需要清理的区块文件");
+                    fileList = null;
+                    return false;
+                }
+                String configCmd = "/mf " + args[0] + " confirm";
+                BaseComponent[] cb = new ComponentBuilder("找到 " + fileList.size() + " 个地图文件, 在输入一次指令或点击")
+                        .color(ChatColor.AQUA)
+                        .append(configCmd)
+                        .color(ChatColor.GREEN)
+                        .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND,configCmd))
+                        .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("点我确认删除").create()))
+                        .create();
+                sender.sendMessage(cb);
+            }
+        }
+        return true;
+    }
+}

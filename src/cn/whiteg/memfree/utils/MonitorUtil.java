@@ -1,10 +1,12 @@
 package cn.whiteg.memfree.utils;
 
-import net.minecraft.server.v1_14_R1.*;
+import net.minecraft.server.v1_15_R1.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
-import org.bukkit.craftbukkit.v1_14_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftMob;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
@@ -77,7 +79,7 @@ public class MonitorUtil {
         if (world == null) return;
         try{
             final WorldServer ws = ((CraftWorld) world).getHandle();
-            Field f = net.minecraft.server.v1_14_R1.World.class.getDeclaredField("chunkProvider");
+            Field f = net.minecraft.server.v1_15_R1.World.class.getDeclaredField("chunkProvider");
             f.setAccessible(true);
             final ChunkProviderServer cps = (ChunkProviderServer) f.get(ws);
             f = cps.getClass().getDeclaredField("playerChunkMap");
@@ -97,5 +99,12 @@ public class MonitorUtil {
         for (org.bukkit.World world : Bukkit.getWorlds()) {
             setDistance(world,cd);
         }
+    }
+
+    public static void clearEntityAI(Mob entity) {
+        EntityInsentient ne = (((CraftMob) entity).getHandle());
+        PathfinderGoalSelector p = new PathfinderGoalSelector((ne.world != null) && (ne.world.getMethodProfiler() != null) ? ne.world.getMethodProfiler() : null);
+        ne.goalSelector = p;
+        ne.targetSelector = p;
     }
 }
