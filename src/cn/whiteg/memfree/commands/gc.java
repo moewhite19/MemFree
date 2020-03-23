@@ -1,6 +1,6 @@
 package cn.whiteg.memfree.commands;
 
-import cn.whiteg.mmocore.CommandInterface;
+import cn.whiteg.memfree.CommandInterface;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;

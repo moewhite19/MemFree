@@ -1,19 +1,28 @@
 package cn.whiteg.memfree;
 
+import cn.whiteg.memfree.utils.CommonUtils;
 import cn.whiteg.memfree.utils.MonitorUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.*;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Mob;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.File;
 import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 public class MFRunnable {
-    static Thread mfThread;
+    private static Thread mfThread;
     final public long max;
     public boolean isTimer;
     public volatile long Mem = 0;
@@ -27,11 +36,14 @@ public class MFRunnable {
     private short maxwarin;
     private long runTick = 2;
     private long lastGcTime;
+    private Thread mainThread = null;
+    private DenyRestart restartTask = null;
 
     public MFRunnable(MemFree me) {
         plugin = me;
         max = Runtime.getRuntime().maxMemory();
         lastGcTime = System.currentTimeMillis();
+
     }
 
 
@@ -46,6 +58,7 @@ public class MFRunnable {
 
                 @Override
                 public void run() {
+//                    if(!isTimer) cancel();
                     //getLogger().info("运行次数" + i++);
                     use = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
                     Mem = max - use;
@@ -58,20 +71,41 @@ public class MFRunnable {
                         if (it != null && it.hasNext()){
                             Player player = it.next();
                             if (!player.isOnline() || player.isDead()) return;
-                            List<Entity> entitys = player.getNearbyEntities(Setting.MaxSpawn_Range,Setting.MaxSpawn_Range,Setting.MaxSpawn_Range);
+                            List<Entity> entitys = player.getNearbyEntities(Setting.MaxSpawn_Range,512D,Setting.MaxSpawn_Range);
+
                             if (Setting.clearAI){
-                                EnumMap<EntityType, Integer> map = new EnumMap<>(EntityType.class);
-                                for (Entity e : entitys) {
-                                    if (e instanceof Mob){
-                                        LivingEntity le = (LivingEntity) e;
+                                EnumMap<EntityType, Integer> num = new EnumMap<>(EntityType.class);
+                                boolean f = false;
+                                Iterator<Entity> ite = entitys.iterator();
+                                while (ite.hasNext()) {
+                                    Entity e = ite.next();
+                                    if (e == null) continue;
+                                    EntityType type = e.getType();
+                                    if (type == EntityType.PLAYER) continue;
+                                    Integer lim = Setting.MaxEntity.getOrDefault(type,Setting.DefMaxEntity);
+                                    Integer i = num.getOrDefault(type,0) + 1;
+                                    if (i > lim){
+                                        if (e instanceof Mob){
+                                            MonitorUtil.clearEntityAI((Mob) e);
+                                            f = true;
+                                            ite.remove();
+                                        } else {
+                                            e.remove();
+                                        }
+                                    } else {
+                                        num.put(type,i);
+                                    }
+                                }
+                                if (f){
+                                    for (Entity e : entitys) {
                                         EntityType type = e.getType();
-                                        if (type == EntityType.PLAYER) continue;
                                         Integer lim = Setting.MaxEntity.getOrDefault(type,Setting.DefMaxEntity);
-                                        Integer i = map.getOrDefault(type,0) + 1;
-                                        map.put(type,i);
-                                        if (i > lim){
+                                        Integer i = num.getOrDefault(type,0) + 1;
+                                        num.put(type,i);
+                                        if (i >= lim && e instanceof Mob){
                                             MonitorUtil.clearEntityAI((Mob) e);
                                         }
+
                                     }
                                 }
                             } else {
@@ -88,11 +122,12 @@ public class MFRunnable {
                                     }
                                 }
                             }
-
+//                            player.sendMessage("搜索完成 耗时" + (System.currentTimeMillis() - startT) + "毫秒");
                         } else {
                             it = Bukkit.getOnlinePlayers().iterator();
                         }
                     }
+
                     //getLogger().info("最小内存" + minfree / 1024 / 1024);
                     //getLogger().info("剩余内存" + free / 1024 / 1024);
                 }
@@ -113,13 +148,21 @@ public class MFRunnable {
                         long st = System.currentTimeMillis();
                         Thread.sleep(tick);
                         if (st - updateTime > 120000){
-                            if (Setting.AutoRestart) System.exit(9);
-                            else MemFree.logger.warning("服务器线程堵塞?");
+                            if (Setting.AutoRestart){
+                                if (mainThread != null){
+                                    try{
+                                        mainThread.stop();
+                                    }catch (Exception e){
+                                        e.printStackTrace();
+                                    }
+                                }
+                                System.exit(9);
+                            } else MemFree.logger.warning("服务器线程堵塞?");
                         }
                         if ((st - updateTime) > tick * 2){
                             warin++;
                             if (warin > maxwarin){
-                                if (Setting.AutoRestart) Restart();
+                                if (Setting.AutoRestart) denyShwtdown();
                                 else MemFree.logger.warning("服务器可能需要重启");
                             }
                             System.out.print("卡顿警告");
@@ -143,63 +186,118 @@ public class MFRunnable {
                                 continue;
                             }
                             if (warin > maxwarin){
-                                if (Setting.AutoRestart) Restart();
+                                if (Setting.AutoRestart) denyShwtdown();
                                 else MemFree.logger.warning("服务器可能需要重启");
                             }
                         } else if (tps < mintps){
                             warin++;
                             if (warin > maxwarin){
-                                if (Setting.AutoRestart) Restart();
+                                if (Setting.AutoRestart) denyShwtdown();
                                 else MemFree.logger.warning("服务器可能需要重启");
                             }
                         } else if (warin > 0) warin--;
-                    }catch (Exception e){
+                        if (Setting.enableAutoClearUpWorld){
+                            long free = Bukkit.getServer().getWorldContainer().getFreeSpace();
+                            if (free < Setting.autoClearMinFreeSpace){
+                                MemFree.logger.info("磁盘剩余空间 " + CommonUtils.tanByte(free) + "开始自动清理世界");
+                                File[] files = new File[Setting.worldClearUpNumber];
+                                Long[] modifiedCache = new Long[files.length];
+                                long size = 0;
+                                for (int wi = 0; wi < Setting.autoClearUpWorlds.length; wi++) {
+                                    File dir = Setting.autoClearUpWorlds[wi];
+                                    long offset = Setting.autoClearUpWhordsOffset[wi];
+                                    if (!dir.isDirectory()) continue;
+                                    for (File region : Objects.requireNonNull(dir.listFiles())) {
+                                        for (int i = 0; i < files.length; i++) {
+                                            long modif = region.lastModified() + offset;
+                                            if (files[i] == null || modif < modifiedCache[i]){
+                                                files[i] = region;
+                                                modifiedCache[i] = modif;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                for (File f : files) {
+                                    if (f == null) continue;
+                                    String name = f.getName();
+                                    long l = f.length();
+                                    if (!f.delete()) continue;
+                                    size += l;
+                                    size += f.length();
+                                    File poidir = new File(f.getParentFile().getParentFile(),"poi");
+                                    if (poidir.isDirectory()){
+                                        File poi = new File(poidir,name);
+                                        size += poi.length();
+                                        if (poi.exists()){
+                                            l = poi.length();
+                                            if (!poi.delete()) continue;
+                                            size += l;
+                                        }
+                                    }
+                                }
+                                MemFree.logger.info("共清理了" + CommonUtils.tanByte(size));
+                            }
+                        }
+
+                    }catch (Throwable e){
                         MemFree.logger.info("计时器错误" + e.getMessage());
+                        e.printStackTrace();
                     }
                 }
             });
             mfThread.setName("MemFreeTimer");
             mfThread.setDaemon(true);
             mfThread.start();
+            Bukkit.getScheduler().runTask(MemFree.plugin,() -> {
+                mainThread = Thread.currentThread();
+                MemFree.logger.info("已获取到主线程: " + mainThread.getName());
+            });
         }
     }
 
 
     public void Restart() {
-        List<String> commands = plugin.getConfig().getStringList("commands");
-        Bukkit.getScheduler().runTask(MemFree.plugin,() -> {
-            sendCommand(commands);
-        });
-        denyShwtdown();
-        MemFree.logger.info("TPS " + tps);
-        MemFree.logger.info("剩余内存 " + Mem / 1024 / 1024 + "MB");
-        warin = 0;
+        stopRestart();
+        List<String> commands = plugin.getConfig().getStringList("onCommands");
+        new BukkitRunnable() {
+            Iterator<String> it = commands.iterator();
+
+            @Override
+            public void run() {
+                if (it.hasNext()){
+                    String cmd = it.next();
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(),cmd.replace('&','§'));
+                } else {
+                    cancel();
+                    it = null;
+                }
+            }
+        }.runTaskTimer(MemFree.plugin,1L,1L);
+        stopTimer();
+//        sendCommand(commands);
+    }
+
+    public void denyShwtdown(int dny) {
+        stopRestart();
+        new DenyRestart(dny);
     }
 
     public void denyShwtdown() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-//                long time = System.currentTimeMillis();
-//                for (Player player : Bukkit.getOnlinePlayers()) {
-//                    if (player.isOnline()) player.kickPlayer("服务器正在重启");
-//                }
-//                for (World world : Bukkit.getWorlds()) {
-//                    for (Chunk chunk : world.getLoadedChunks()) {
-//                        chunk.unload(true);
-//                    }
-//                }
-//                MemFree.logger.info("耗时: " + String.valueOf(System.currentTimeMillis() - time) + "ms");
-                List<String> commands = plugin.getConfig().getStringList("onCommands");
-                sendCommand(commands);
-            }
-        }.runTaskLater(plugin,20 * plugin.getConfig().getLong("onTime"));
+        int time = Setting.restartDeny;
+        denyShwtdown(time);
     }
 
     public void stopTimer() {
         if (Runer == null) return;
         Runer.cancel();
         Runer = null;
+//        try{
+//            mfThread.stop();
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
         mfThread = null;
         isTimer = false;
         getLogger().info("已关闭计时器");
@@ -213,4 +311,59 @@ public class MFRunnable {
         }
     }
 
+    public boolean hasRestart() {
+        return restartTask != null;
+    }
+
+    public boolean stopRestart() {
+        if (restartTask != null){
+            restartTask.stop();
+            return true;
+        }
+        return false;
+    }
+
+    public Thread getMainThread() {
+        return mainThread;
+    }
+
+    public class DenyRestart extends BukkitRunnable {
+        final int time;
+        private final BossBar bar;
+        int dny;
+
+        public DenyRestart(int s) {
+            time = s;
+            dny = s;
+            bar = Bukkit.createBossBar("重启倒计时",BarColor.WHITE,BarStyle.SOLID);
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                bar.addPlayer(onlinePlayer);
+                onlinePlayer.sendMessage("服务器将会在" + time + "秒后重启");
+            }
+            runTaskTimer(MemFree.plugin,20L,20L);
+            restartTask = this;
+        }
+
+        @Override
+        public void run() {
+            dny--;
+            if (dny <= 0){
+                cancel();
+                bar.removeAll();
+                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                    onlinePlayer.kickPlayer("§f服务器似乎内存满了,\n请等待1分钟服务器重启完成后再加入服务器. \n§l期待与您再见.");
+                }
+                Restart();
+                stop();
+            } else {
+                bar.setProgress(((double) dny) / time);
+            }
+        }
+
+        public void stop() {
+            bar.removeAll();
+            cancel();
+            restartTask = null;
+        }
+    }
 }

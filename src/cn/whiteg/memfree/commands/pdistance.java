@@ -1,7 +1,7 @@
 package cn.whiteg.memfree.commands;
 
+import cn.whiteg.memfree.CommandInterface;
 import cn.whiteg.memfree.utils.MonitorUtil;
-import cn.whiteg.mmocore.CommandInterface;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;

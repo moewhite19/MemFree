@@ -1,7 +1,7 @@
 package cn.whiteg.memfree.commands;
 
+import cn.whiteg.memfree.CommandInterface;
 import cn.whiteg.memfree.utils.ShellKit;
-import cn.whiteg.mmocore.CommandInterface;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import java.util.List;

@@ -1,7 +1,7 @@
 #配置版本号
 var: 1
 debug: false
-Auto_Restart: true
+Auto_Restart: false
 MaxWaring: 25
 #最小内存（单位MB）
 minfree: 256
@@ -10,32 +10,40 @@ minfree: 256
 mintps: 8
 #检测间隔 （单位 秒）
 runTick: 1
-#内存小于设定的值时执行
-commands:
-- "say §b 服务器内存满啦,需要重启释放内存."
-- "say §b 服务器将在5秒后重启"
-#延迟(单位 秒)
-onTime: 5
-#延迟执行指令
+#重启延时(单位 秒)
+restartDeny: 15
+#重启指令
 onCommands:
-- "kick @a &f服务器似乎内存满了,\n请等待1分钟服务器重启完成后再加入服务器. \n§l期待与您再见."
-- "restart"
+  - "restart"
 
+#当在线达到指定人数时禁止鞘翅加速 0为拒绝
 limElytra: 15
 
 #自动GC
 AutoGC:
-  Enable: true
+  Enable: false
   #最小危险值
   minWarin: 3
   #最小回收间隔 单位：秒
   minTick: 360
 
-
+#当储存空间不足时自动清理世界区域,多世界可选
+AutoClearUpWorld:
+  Enable: false
+  #清理区域文件数量
+  ClearNumber: 128
+  #最小值 单位:MB
+  MinFreeSpace: 64
+  #清理的世界和最后修改补偿天数(越大越不容易清理)
+  Worlds:
+    world: 30
+    zy: 0
+    world_the_end: -10
+    world_nether: 0
 
 #区块实体生成限制器
 MaxEntity:
-  Enable: true
+  Enable: false
   #用清理AI代替移除
   ClearAI: true
   Range: 32

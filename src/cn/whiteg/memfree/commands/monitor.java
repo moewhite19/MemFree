@@ -1,8 +1,9 @@
 package cn.whiteg.memfree.commands;
 
+import cn.whiteg.memfree.CommandInterface;
 import cn.whiteg.memfree.MemFree;
-import cn.whiteg.mmocore.CommandInterface;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -17,6 +18,8 @@ import java.util.List;
 public class monitor extends CommandInterface implements Listener {
     private CommandSender mder;
     private MemFree plugin;
+    private int x = 0;
+    private int z = 0;
 
     public monitor() {
         plugin = MemFree.plugin;
@@ -24,12 +27,20 @@ public class monitor extends CommandInterface implements Listener {
 
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent event) {
-        mder.sendMessage(event.isNewChunk() ? "生成区块" : "加载区块" + event.getChunk().toString());
+        Chunk c = event.getChunk();
+        if (x != Integer.MAX_VALUE && (x != c.getX() || z != c.getZ())){
+            return;
+        }
+        mder.sendMessage(event.isNewChunk() ? "生成区块" : "加载区块" + c.toString());
     }
 
     @EventHandler
     public void onChunkUnload(ChunkUnloadEvent event) {
-        mder.sendMessage("卸载区块" + event.getChunk().toString());
+        Chunk c = event.getChunk();
+        if (x != Integer.MAX_VALUE && (x != c.getX() || z != c.getZ())){
+            return;
+        }
+        mder.sendMessage("卸载区块" + c.toString());
     }
 
     @EventHandler
@@ -48,6 +59,26 @@ public class monitor extends CommandInterface implements Listener {
             sender.sendMessage("没有权限");
             return true;
         }
+        if (mder != null){
+            unreg();
+            sender.sendMessage("取消监听");
+            return true;
+        }
+        try{
+            if (args.length == 3){
+                x = Integer.parseInt(args[1]);
+                z = Integer.parseInt(args[2]);
+            } else if (args.length == 2){
+                x = Integer.MAX_VALUE;
+            } else if (sender instanceof Player){
+                Chunk c = ((Player) sender).getChunk();
+                x = c.getX();
+                z = c.getZ();
+            }
+        }catch (NumberFormatException e){
+            sender.sendMessage("参数有误");
+        }
+        sender.sendMessage("开始监听区块");
         reg(sender);
         return true;
     }
@@ -56,7 +87,6 @@ public class monitor extends CommandInterface implements Listener {
         ChunkLoadEvent.getHandlerList().unregister(this);
         ChunkUnloadEvent.getHandlerList().unregister(this);
         PlayerQuitEvent.getHandlerList().unregister(this);
-        mder.sendMessage("停止监听");
         mder = null;
     }
 
@@ -70,7 +100,6 @@ public class monitor extends CommandInterface implements Listener {
             unreg();
         }
         mder = sender;
-        sender.sendMessage("开始监听事件");
         Bukkit.getPluginManager().registerEvents(this,plugin);
     }
 

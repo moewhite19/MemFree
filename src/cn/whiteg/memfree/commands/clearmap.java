@@ -1,6 +1,6 @@
 package cn.whiteg.memfree.commands;
 
-import cn.whiteg.mmocore.CommandInterface;
+import cn.whiteg.memfree.CommandInterface;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -36,11 +36,6 @@ public class clearmap extends CommandInterface {
                         String name = f.getName();
                         try{
                             f.delete();
-                            File poidir = new File(f.getParentFile(),"poi");
-                            if (poidir.isDirectory()){
-                                File poi = new File(poidir,name);
-                                if (poi.exists()) poi.delete();
-                            }
                             done++;
                         }catch (Exception e){
                             sender.sendMessage("清理失败" + name);
