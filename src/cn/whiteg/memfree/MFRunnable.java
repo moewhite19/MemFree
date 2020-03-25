@@ -262,9 +262,6 @@ public class MFRunnable {
 
 
     public void Restart() {
-        if (restartTask != null){
-            return;
-        }
         stopRestart();
         List<String> commands = plugin.getConfig().getStringList("onCommands");
         new BukkitRunnable() {
@@ -291,6 +288,9 @@ public class MFRunnable {
     }
 
     public void denyShwtdown() {
+        if (restartTask != null){
+            return;
+        }
         int time = Setting.restartDeny;
         denyShwtdown(time);
     }
