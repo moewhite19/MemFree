@@ -34,12 +34,12 @@ AutoClearUpWorld:
   ClearNumber: 128
   #最小值 单位:MB
   MinFreeSpace: 64
-  #清理的世界和最后修改补偿天数(越大越不容易清理)
+  #清理的世界和最后修改补偿天数(越大越不容易清理),如果区块最后访问距离当前时间（多少天前）小于数值也不会清理
   Worlds:
-    world: 30
+    world: 40
     zy: 0
-    world_the_end: -10
-    world_nether: 0
+    world_the_end: 10
+    world_nether: 10
 
 #区块实体生成限制器
 MaxEntity:

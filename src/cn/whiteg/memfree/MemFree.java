@@ -46,6 +46,7 @@ public class MemFree extends PluginBase {
         //InventoryClickEvent.getHandlerList().unregister(exitev);
         unregListener();
         timer.stopTimer();
+        timer = null;
         getLogger().info("已关闭");
     }
 }

@@ -203,6 +203,7 @@ public class MFRunnable {
                                 File[] files = new File[Setting.worldClearUpNumber];
                                 Long[] modifiedCache = new Long[files.length];
                                 long size = 0;
+                                long now = System.currentTimeMillis();
                                 for (int wi = 0; wi < Setting.autoClearUpWorlds.length; wi++) {
                                     File dir = Setting.autoClearUpWorlds[wi];
                                     long offset = Setting.autoClearUpWhordsOffset[wi];
@@ -210,7 +211,7 @@ public class MFRunnable {
                                     for (File region : Objects.requireNonNull(dir.listFiles())) {
                                         for (int i = 0; i < files.length; i++) {
                                             long modif = region.lastModified() + offset;
-                                            if (files[i] == null || modif < modifiedCache[i]){
+                                            if (modif < now && (files[i] == null || modif < modifiedCache[i])){
                                                 files[i] = region;
                                                 modifiedCache[i] = modif;
                                                 break;
@@ -237,7 +238,9 @@ public class MFRunnable {
                                         }
                                     }
                                 }
-                                MemFree.logger.info("共清理了" + CommonUtils.tanByte(size));
+                                if (size > 0)
+                                    MemFree.logger.info("共清理了" + CommonUtils.tanByte(size));
+                                else MemFree.logger.info("没有清理掉任何文件");
                             }
                         }
 
@@ -259,6 +262,9 @@ public class MFRunnable {
 
 
     public void Restart() {
+        if (restartTask != null){
+            return;
+        }
         stopRestart();
         List<String> commands = plugin.getConfig().getStringList("onCommands");
         new BukkitRunnable() {
@@ -275,7 +281,7 @@ public class MFRunnable {
                 }
             }
         }.runTaskTimer(MemFree.plugin,1L,1L);
-        stopTimer();
+//        stopTimer();
 //        sendCommand(commands);
     }
 
