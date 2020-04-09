@@ -1,5 +1,6 @@
 package cn.whiteg.memfree;
 
+import cn.whiteg.memfree.Listener.PlayerListener;
 import cn.whiteg.memfree.Listener.limElytra;
 import org.bukkit.command.PluginCommand;
 
@@ -11,7 +12,6 @@ import static cn.whiteg.memfree.Setting.*;
 public class MemFree extends PluginBase {
     public static Logger logger;
     public static MemFree plugin;
-    static long runtime = 0;
     public MFRunnable timer = new MFRunnable(this);
     public CommandManage mainCmd;
 
@@ -36,8 +36,8 @@ public class MemFree extends PluginBase {
             mfcmd.setTabCompleter(mainCmd);
         }
         if (Setting.limElytra > 0) regListener(new limElytra());
+        regListener(new PlayerListener());
         if (DEBUG) getLogger().info("启用计时器");
-        if (runtime == 0) runtime = ManagementFactory.getRuntimeMXBean().getStartTime();
         logger.info("已启用");
         timer.setTimer();
     }

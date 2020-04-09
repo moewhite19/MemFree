@@ -8,6 +8,7 @@ import org.bukkit.craftbukkit.v1_15_R1.entity.CraftMob;
 import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -103,8 +104,17 @@ public class MonitorUtil {
 
     public static void clearEntityAI(Mob entity) {
         EntityInsentient ne = (((CraftMob) entity).getHandle());
-        PathfinderGoalSelector p = new PathfinderGoalSelector((ne.world != null) && (ne.world.getMethodProfiler() != null) ? ne.world.getMethodProfiler() : null);
+//        PathfinderGoalSelector p = new PathfinderGoalSelector(null);
+        if (ne.world == null){
+            entity.remove();
+        }
+        GameProfilerFiller mp = ne.world.getMethodProfiler();
+        if (mp == null){
+            entity.remove();
+        }
+        PathfinderGoalSelector p = new PathfinderGoalSelector(mp);
         ne.goalSelector = p;
         ne.targetSelector = p;
     }
+
 }

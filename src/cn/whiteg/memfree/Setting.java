@@ -1,6 +1,7 @@
 package cn.whiteg.memfree;
 
 import cn.whiteg.memfree.commands.clearchunk;
+import cn.whiteg.memfree.utils.CommonUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -15,7 +16,6 @@ public class Setting {
     public static boolean DEBUG;
     public static boolean AutoRestart;
     public static int AllEntity;
-    public static double MaxSpawn_Range;
     public static String f3info;
     public static long minfree;
     public static double mintps;
@@ -33,6 +33,7 @@ public class Setting {
     public static long autoClearMinFreeSpace = 0;
     public static File[] autoClearUpWorlds = null;
     public static Long[] autoClearUpWhordsOffset = null;
+    public static double MaxEntity_Range;
 
     static public void reload() {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(new File(MemFree.plugin.getDataFolder(),"config.yml"));
@@ -43,11 +44,11 @@ public class Setting {
         minfree = config.getLong("minfree") * 1024 * 1024;
         Max_Warin = (short) config.getInt("MaxWaring",400);
         limElytra = config.getInt("limElytra",0);
-        restartDeny = config.getInt("restartDeny",restartDeny);
+        restartDeny = config.getInt("restartDeny",restartDeny) * 1000;
         ConfigurationSection sc;
         if (config.getBoolean("MaxEntity.Enable",false)){
             sc = config.getConfigurationSection("MaxEntity.Entitys");
-            MaxSpawn_Range = config.getDouble("MaxEntity.Range");
+            MaxEntity_Range = config.getDouble("MaxEntity.Range");
             AllEntity = config.getInt("MaxEntity.MaxAllEntity");
             DefMaxEntity = config.getInt("MaxEntity.DefMaxEntity");
             clearAI = config.getBoolean("MaxEntity.ClearAI",clearAI);
@@ -78,7 +79,7 @@ public class Setting {
             enableAutoClearUpWorld = sc.getBoolean("Enable",enableAutoClearUpWorld);
             if (enableAutoClearUpWorld){
                 worldClearUpNumber = sc.getInt("ClearNumber",worldClearUpNumber);
-                autoClearMinFreeSpace = sc.getLong("MinFreeSpace",autoClearMinFreeSpace);
+                autoClearMinFreeSpace = CommonUtils.toByteLength(sc.getString("MinFreeSpace",""));
 
                 if (worldClearUpNumber <= 0 || autoClearMinFreeSpace <= 0){
                     enableAutoClearUpWorld = false;

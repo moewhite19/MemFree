@@ -6,10 +6,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Mob;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -37,7 +36,7 @@ public class MFRunnable {
     private long runTick = 2;
     private long lastGcTime;
     private Thread mainThread = null;
-    private DenyRestart restartTask = null;
+    private DenyRestart denyTask = null;
 
     public MFRunnable(MemFree me) {
         plugin = me;
@@ -54,7 +53,8 @@ public class MFRunnable {
             getLogger().info("启动计时器");
             isTimer = true;
             Runer = new BukkitRunnable() {
-                Iterator<? extends Player> it = null;
+                //玩家遍历器
+                Iterator<? extends Player> playersIt = Bukkit.getOnlinePlayers().iterator();
 
                 @Override
                 public void run() {
@@ -68,24 +68,26 @@ public class MFRunnable {
                     //Mem = (Mem + free) / 2;
                     tps = runTick * 1000 / ((float) runTime) * 20;
                     if (Setting.MaxEntity != null){
-                        if (it != null && it.hasNext()){
-                            Player player = it.next();
+                        if (playersIt.hasNext()){
+                            Player player = playersIt.next();
                             if (!player.isOnline() || player.isDead()) return;
-                            List<Entity> entitys = player.getNearbyEntities(Setting.MaxSpawn_Range,512D,Setting.MaxSpawn_Range);
-
+                            List<Entity> entitys = player.getNearbyEntities(Setting.MaxEntity_Range,512D,Setting.MaxEntity_Range);
                             if (Setting.clearAI){
-                                EnumMap<EntityType, Integer> num = new EnumMap<>(EntityType.class);
+                                EnumMap<EntityType, Integer> map = new EnumMap<>(EntityType.class);
                                 boolean f = false;
                                 Iterator<Entity> ite = entitys.iterator();
                                 while (ite.hasNext()) {
                                     Entity e = ite.next();
-                                    if (e == null) continue;
+                                    if (e instanceof Player) continue;
                                     EntityType type = e.getType();
-                                    if (type == EntityType.PLAYER) continue;
                                     Integer lim = Setting.MaxEntity.getOrDefault(type,Setting.DefMaxEntity);
-                                    Integer i = num.getOrDefault(type,0) + 1;
+                                    Integer i = map.getOrDefault(type,0) + 1;
                                     if (i > lim){
-                                        if (e instanceof Mob){
+                                        if (e instanceof Villager){
+                                            //村民没法删除AI  那就给他凋零效果吧
+                                            ((Villager) e).addPotionEffect(new PotionEffect(PotionEffectType.WITHER,100,1));
+//                                            e.remove();
+                                        } else if (e instanceof Mob){
                                             MonitorUtil.clearEntityAI((Mob) e);
                                             f = true;
                                             ite.remove();
@@ -93,15 +95,15 @@ public class MFRunnable {
                                             e.remove();
                                         }
                                     } else {
-                                        num.put(type,i);
+                                        map.put(type,i);
                                     }
                                 }
                                 if (f){
                                     for (Entity e : entitys) {
                                         EntityType type = e.getType();
                                         Integer lim = Setting.MaxEntity.getOrDefault(type,Setting.DefMaxEntity);
-                                        Integer i = num.getOrDefault(type,0) + 1;
-                                        num.put(type,i);
+                                        Integer i = map.getOrDefault(type,0) + 1;
+                                        map.put(type,i);
                                         if (i >= lim && e instanceof Mob){
                                             MonitorUtil.clearEntityAI((Mob) e);
                                         }
@@ -111,8 +113,8 @@ public class MFRunnable {
                             } else {
                                 EnumMap<EntityType, Integer> map = new EnumMap<>(EntityType.class);
                                 for (Entity e : entitys) {
+                                    if (e instanceof Player) continue;
                                     EntityType type = e.getType();
-                                    if (type == EntityType.PLAYER) continue;
                                     Integer lim = Setting.MaxEntity.getOrDefault(type,Setting.DefMaxEntity);
                                     Integer i = map.getOrDefault(type,0) + 1;
                                     if (i > lim){
@@ -124,7 +126,7 @@ public class MFRunnable {
                             }
 //                            player.sendMessage("搜索完成 耗时" + (System.currentTimeMillis() - startT) + "毫秒");
                         } else {
-                            it = Bukkit.getOnlinePlayers().iterator();
+                            playersIt = Bukkit.getOnlinePlayers().iterator();
                         }
                     }
 
@@ -170,7 +172,7 @@ public class MFRunnable {
                             continue;
                         }
                         if (Mem < minfree){
-                            if (Setting.DEBUG) MemFree.logger.info("内存警告");
+                            if (Setting.DEBUG) MemFree.logger.warning("内存警告");
                             warin++;
                             long now = System.currentTimeMillis();
                             if (Setting.autoGc && warin > Setting.gcMinWarin && (now - lastGcTime) > Setting.gcMinTick){
@@ -262,7 +264,6 @@ public class MFRunnable {
 
 
     public void Restart() {
-        stopRestart();
         List<String> commands = plugin.getConfig().getStringList("onCommands");
         new BukkitRunnable() {
             Iterator<String> it = commands.iterator();
@@ -282,13 +283,18 @@ public class MFRunnable {
 //        sendCommand(commands);
     }
 
-    public void denyShwtdown(int dny) {
+    public void denyShwtdown(long dny) {
         stopRestart();
         new DenyRestart(dny);
     }
 
+    public void denyShwtdown(long dny,long time) {
+        stopRestart();
+        new DenyRestart(dny,time);
+    }
+
     public void denyShwtdown() {
-        if (restartTask != null){
+        if (denyTask != null){
             return;
         }
         int time = Setting.restartDeny;
@@ -318,12 +324,16 @@ public class MFRunnable {
     }
 
     public boolean hasRestart() {
-        return restartTask != null;
+        return denyTask != null;
+    }
+
+    public DenyRestart getDenyTask() {
+        return denyTask;
     }
 
     public boolean stopRestart() {
-        if (restartTask != null){
-            restartTask.stop();
+        if (denyTask != null){
+            denyTask.stop();
             return true;
         }
         return false;
@@ -334,42 +344,73 @@ public class MFRunnable {
     }
 
     public class DenyRestart extends BukkitRunnable {
-        final int time;
-        private final BossBar bar;
-        int dny;
+        final long time;
+        long last;
+        long dny;
+        private BossBar bar = null;
 
-        public DenyRestart(int s) {
-            time = s;
-            dny = s;
-            bar = Bukkit.createBossBar("重启倒计时",BarColor.WHITE,BarStyle.SOLID);
-            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                bar.addPlayer(onlinePlayer);
-                onlinePlayer.sendMessage("服务器将会在" + time + "秒后重启");
+        public DenyRestart(long s) {
+            if (s > 60000){
+                time = 60000;
+            } else {
+                time = s;
             }
+            dny = s;
+            last = System.currentTimeMillis();
             runTaskTimer(MemFree.plugin,20L,20L);
-            restartTask = this;
+            denyTask = this;
+        }
+
+        public DenyRestart(long s,long time) {
+            this.time = time;
+            dny = s;
+            last = System.currentTimeMillis();
+            runTaskTimer(MemFree.plugin,20L,20L);
+            denyTask = this;
         }
 
         @Override
         public void run() {
-            dny--;
+            long now = System.currentTimeMillis();
+            dny -= now - last;
+            last = now;
             if (dny <= 0){
                 cancel();
-                bar.removeAll();
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                     onlinePlayer.kickPlayer("§f服务器似乎内存满了,\n请等待1分钟服务器重启完成后再加入服务器. \n§l期待与您再见.");
                 }
                 Restart();
                 stop();
             } else {
-                bar.setProgress(((double) dny) / time);
+                if (bar != null){
+                    bar.setProgress(((double) dny) / time);
+                    bar.setTitle(getMsg());
+                } else if (dny < time){
+                    bar = Bukkit.createBossBar(getMsg(),BarColor.WHITE,BarStyle.SOLID);
+                    for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                        bar.addPlayer(onlinePlayer);
+                        onlinePlayer.sendMessage("服务器将会在" + CommonUtils.tanMintoh(time) + "后重启");
+                    }
+                }
             }
         }
 
         public void stop() {
-            bar.removeAll();
+            if (bar != null) bar.removeAll();
             cancel();
-            restartTask = null;
+            denyTask = null;
+        }
+
+        public BossBar getBar() {
+            return bar;
+        }
+
+        String getMsg() {
+            return "§b重启倒计时§f" + CommonUtils.tanMintoh(dny);
+        }
+
+        public long getDny() {
+            return dny;
         }
     }
 }

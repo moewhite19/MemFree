@@ -34,7 +34,7 @@ public class EntitySpawn implements Listener {
             }
             number = 0;
             entitynum = 0;
-            Collection<Entity> els = entity.getNearbyEntities(MaxSpawn_Range,128,MaxSpawn_Range);
+            Collection<Entity> els = entity.getNearbyEntities(MaxEntity_Range,128,MaxEntity_Range);
             for (Entity e : els) {
                 if (e.getType() == entity.getType()) entitynum++;
                 number++;

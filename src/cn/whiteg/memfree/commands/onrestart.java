@@ -4,10 +4,9 @@ import cn.whiteg.memfree.CommandInterface;
 import cn.whiteg.memfree.MFRunnable;
 import cn.whiteg.memfree.MemFree;
 import cn.whiteg.memfree.Setting;
-import org.bukkit.Bukkit;
+import cn.whiteg.memfree.utils.CommonUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 import java.util.List;
 
@@ -21,20 +20,34 @@ public class onrestart extends CommandInterface {
             return false;
         }
         MFRunnable t = MemFree.plugin.timer;
-        int dny = Setting.restartDeny;
+
+        long dny;
         if (args.length > 1){
-            try{
-                dny = Integer.parseInt(args[1]);
-            }catch (NumberFormatException ignored){
-            }
+            dny = CommonUtils.getTimeMintoh(args[1]);
+        } else {
+            dny = Setting.restartDeny;
+        }
+
+        long time;
+        if (args.length > 2){
+            time = CommonUtils.getTimeMintoh(args[2]);
+        } else {
+            time = 0;
+        }
+
+        if (dny <= 0){
+            sender.sendMessage("参数有误");
+            return false;
         }
         if (t.stopRestart()){
             sender.sendMessage("已停止重启倒计时");
         } else {
-            t.denyShwtdown(dny);
-            if (!(sender instanceof Player)){
-                Bukkit.getServer().broadcastMessage("服务器将会在" + dny + "秒后重启");
+            if (time > 0){
+                t.denyShwtdown(dny,time);
+            } else {
+                t.denyShwtdown(dny);
             }
+            sender.sendMessage("已设置重启倒计时:" + CommonUtils.tanMintoh(dny));
         }
         return true;
     }

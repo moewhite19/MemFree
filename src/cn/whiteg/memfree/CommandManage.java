@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 
+import java.lang.management.ManagementFactory;
 import java.util.*;
 
 public class CommandManage extends CommandInterface {
@@ -26,7 +27,7 @@ public class CommandManage extends CommandInterface {
                 CommandInterface ci = (CommandInterface) c.newInstance();
                 regCommand(cmd,ci);
                 PluginCommand pc = MemFree.plugin.getCommand(cmd);
-                if(pc != null){
+                if (pc != null){
                     pc.setExecutor(subCommand);
                     pc.setTabCompleter(subCommand);
                 }
@@ -102,7 +103,7 @@ public class CommandManage extends CommandInterface {
         sender.sendMessage("§bTPS§3:§r " + String.format("%.2f",MemFree.plugin.timer.tps) + (dtps != null ? " §b平均:§f" + Arrays.toString(dtps) : " "));
         //获取线程数
         final int threadcount = Thread.currentThread().getThreadGroup().activeCount();
-        sender.sendMessage("§b服务器已运行§3:§r " + CommonUtils.tanMintoh(Math.round((double) (System.currentTimeMillis() - MemFree.runtime) / 1000 / 60)) + "  §3线程数:§f" + threadcount);
+        sender.sendMessage("§b服务器已运行§3:§r " + CommonUtils.tanMintoh(System.currentTimeMillis() - ManagementFactory.getRuntimeMXBean().getStartTime()) + "  §3线程数:§f" + threadcount);
         sender.sendMessage("§b内存使用§3:§f " + max / 1024 / 1024 + "MB§7-§f" + use / 1024 / 1024 + "MB §7= §f" + MemFree.plugin.timer.Mem / 1024 / 1024 + "§7MB " + "  §b已启用: §f" + Runtime.getRuntime().totalMemory() / 1024 / 1024 + "§7MB");
         final long dt = ser.getWorldContainer().getTotalSpace();
         final long du = ser.getWorldContainer().getUsableSpace();
