@@ -2,9 +2,9 @@
 var: 1
 debug: false
 Auto_Restart: false
-MaxWaring: 25
-#最小内存（单位MB）
-minfree: 256
+MaxWaring: 25M
+#最小内存
+minfree: 256M
 
 #最小TPS
 mintps: 8
@@ -16,23 +16,19 @@ restartDeny: 15
 onCommands:
   - "restart"
 
-#当在线达到指定人数时禁止鞘翅加速 0为拒绝
-limElytra: 15
-
 #自动GC
 AutoGC:
   Enable: false
   #最小危险值
   minWarin: 3
-  #最小回收间隔 单位：秒
-  minTick: 360
+  #最小回收间隔
+  minTick: 1H
 
 #当储存空间不足时自动清理世界区域,多世界可选
 AutoClearUpWorld:
   Enable: false
   #清理区域文件数量
   ClearNumber: 64
-
   MinFreeSpace: 64M
   #清理的世界和最后修改补偿天数(越大越不容易清理),如果区块最后访问距离当前时间（多少天前）小于数值也不会清理
   Worlds:

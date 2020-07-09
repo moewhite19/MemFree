@@ -23,7 +23,7 @@ public class Setting {
     public static int RunTick;
     public static short Max_Warin;
     public static int limElytra;
-    public static boolean autoGc = false;
+    public static boolean autoGc;
     public static long gcMinTick = 3600000L;
     public static int gcMinWarin = 3;
     public static boolean clearAI = false;
@@ -41,9 +41,9 @@ public class Setting {
         AutoRestart = config.getBoolean("Auto_Restart",false);
         RunTick = config.getInt("runTick");
         f3info = config.getString("F3info");
-        minfree = config.getLong("minfree") * 1024 * 1024;
+        minfree = CommonUtils.toByteLength(config.getString("minfree","512M"));
+        MemFree.logger.info("最小内存： " + CommonUtils.tanByte(minfree));
         Max_Warin = (short) config.getInt("MaxWaring",400);
-        limElytra = config.getInt("limElytra",0);
         restartDeny = config.getInt("restartDeny",restartDeny) * 1000;
         ConfigurationSection sc;
         if (config.getBoolean("MaxEntity.Enable",false)){
@@ -65,11 +65,10 @@ public class Setting {
         } else {
             MaxEntity = null;
         }
-        sc = config.getConfigurationSection("AutoGc");
+        sc = config.getConfigurationSection("AutoGC");
         if (sc != null){
             autoGc = sc.getBoolean("Enable",autoGc);
-            long tick = sc.getInt("minTick",0);
-            if (tick > 0) gcMinTick = tick * 1000;
+            gcMinTick = CommonUtils.getTimeMintoh(sc.getString("minTick","1h"));
             gcMinWarin = sc.getInt("minWarin",gcMinWarin);
         }
 
@@ -80,11 +79,10 @@ public class Setting {
             if (enableAutoClearUpWorld){
                 worldClearUpNumber = sc.getInt("ClearNumber",worldClearUpNumber);
                 autoClearMinFreeSpace = CommonUtils.toByteLength(sc.getString("MinFreeSpace",""));
-
+                MemFree.logger.info("自动清理区块筏值: " + CommonUtils.tanMintoh(autoClearMinFreeSpace));
                 if (worldClearUpNumber <= 0 || autoClearMinFreeSpace <= 0){
                     enableAutoClearUpWorld = false;
                 } else {
-                    autoClearMinFreeSpace = autoClearMinFreeSpace * 1024 * 1024;
                     ConfigurationSection worldCS = sc.getConfigurationSection("Worlds");
                     if (worldCS != null){
                         Set<String> worldKeys = worldCS.getKeys(false);

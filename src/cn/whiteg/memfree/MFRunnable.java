@@ -23,7 +23,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 public class MFRunnable {
     private static Thread mfThread;
     final public long max;
-    public boolean isTimer;
+    public boolean isRun;
     public volatile long Mem = 0;
     public volatile float tps = 20;
     public short warin = 0;
@@ -47,11 +47,11 @@ public class MFRunnable {
 
 
     public void setTimer() {
-        if (isTimer){
+        if (isRun){
             getLogger().info("§b错误！  计时器已经启用");
         } else {
             getLogger().info("启动计时器");
-            isTimer = true;
+            isRun = true;
             Runer = new BukkitRunnable() {
                 //玩家遍历器
                 Iterator<? extends Player> playersIt = Bukkit.getOnlinePlayers().iterator();
@@ -145,7 +145,7 @@ public class MFRunnable {
                 }catch (InterruptedException e){
                     e.printStackTrace();
                 }
-                while (isTimer) {
+                while (isRun) {
                     try{
                         long st = System.currentTimeMillis();
                         Thread.sleep(tick);
@@ -175,16 +175,16 @@ public class MFRunnable {
                             if (Setting.DEBUG) MemFree.logger.warning("内存警告");
                             warin++;
                             long now = System.currentTimeMillis();
-                            if (Setting.autoGc && warin > Setting.gcMinWarin && (now - lastGcTime) > Setting.gcMinTick){
-                                lastGcTime = now;
+                            if (Setting.autoGc && now > lastGcTime && warin >= Setting.gcMinWarin){
                                 Bukkit.broadcastMessage("服务器开始强制回收内存,可能会有短暂卡顿");
+                                lastGcTime = now + Setting.gcMinTick;
                                 long n = System.currentTimeMillis();
                                 final Runtime r = Runtime.getRuntime();
                                 final long m = r.freeMemory();
                                 System.gc();
                                 long now_m = r.freeMemory() - m;
-                                Bukkit.broadcastMessage("内存回收完成,回收了" + now_m / 1024 / 1024 + "MB内存 耗时" + (System.currentTimeMillis() - n) + "ms");
                                 warin = 0;
+                                Bukkit.broadcastMessage("内存回收完成,回收了" + now_m / 1024 / 1024 + "MB内存 耗时" + (System.currentTimeMillis() - n) + "ms");
                                 continue;
                             }
                             if (warin > maxwarin){
@@ -245,7 +245,6 @@ public class MFRunnable {
                                 else MemFree.logger.info("没有清理掉任何文件");
                             }
                         }
-
                     }catch (Throwable e){
                         MemFree.logger.info("计时器错误" + e.getMessage());
                         e.printStackTrace();
@@ -311,7 +310,7 @@ public class MFRunnable {
 //            e.printStackTrace();
 //        }
         mfThread = null;
-        isTimer = false;
+        isRun = false;
         getLogger().info("已关闭计时器");
     }
 

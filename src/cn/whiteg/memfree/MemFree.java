@@ -1,10 +1,9 @@
 package cn.whiteg.memfree;
 
 import cn.whiteg.memfree.Listener.PlayerListener;
-import cn.whiteg.memfree.Listener.limElytra;
+import cn.whiteg.memfree.utils.CommonUtils;
 import org.bukkit.command.PluginCommand;
 
-import java.lang.management.ManagementFactory;
 import java.util.logging.Logger;
 
 import static cn.whiteg.memfree.Setting.*;
@@ -22,7 +21,7 @@ public class MemFree extends PluginBase {
     public void onLoad() {
         //getLogger().info("加载配置文件");
         saveDefaultConfig();
-        minfree = getConfig().getLong("minfree") * 1024 * 1024;
+        minfree = CommonUtils.toByteLength(getConfig().getString("minfree","256m"));
         mintps = getConfig().getDouble("mintps");
     }
 
@@ -35,7 +34,6 @@ public class MemFree extends PluginBase {
             mfcmd.setExecutor(mainCmd);
             mfcmd.setTabCompleter(mainCmd);
         }
-        if (Setting.limElytra > 0) regListener(new limElytra());
         regListener(new PlayerListener());
         if (DEBUG) getLogger().info("启用计时器");
         logger.info("已启用");
@@ -43,7 +41,6 @@ public class MemFree extends PluginBase {
     }
 
     public void onDisable() {
-        //InventoryClickEvent.getHandlerList().unregister(exitev);
         unregListener();
         timer.stopTimer();
         timer = null;

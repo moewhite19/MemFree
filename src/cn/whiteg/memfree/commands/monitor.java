@@ -71,7 +71,7 @@ public class monitor extends CommandInterface implements Listener {
             } else if (args.length == 2){
                 x = Integer.MAX_VALUE;
             } else if (sender instanceof Player){
-                Chunk c = ((Player) sender).getChunk();
+                Chunk c = ((Player) sender).getLocation().getChunk();
                 x = c.getX();
                 z = c.getZ();
             }

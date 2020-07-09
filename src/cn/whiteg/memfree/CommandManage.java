@@ -86,7 +86,7 @@ public class CommandManage extends CommandInterface {
 
     public void sta(CommandSender sender) {
         sender.sendMessage("§3[§bMemFree§3]");
-        sender.sendMessage("§b当前计时器" + (MemFree.plugin.timer.isTimer ? "§a已启用" : "§7未启用") + " §b自动重启" + (Setting.AutoRestart ? "§a已启用" : "§7未启用") + " §b危险程度:§b" + MemFree.plugin.timer.warin);
+        sender.sendMessage("§b当前计时器" + (MemFree.plugin.timer.isRun ? "§a已启用" : "§7未启用") + " §b自动重启" + (Setting.AutoRestart ? "§a已启用" : "§7未启用") + " §b危险程度:§b" + MemFree.plugin.timer.warin);
         long max = Runtime.getRuntime().maxMemory();
         long use = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
@@ -104,7 +104,7 @@ public class CommandManage extends CommandInterface {
         //获取线程数
         final int threadcount = Thread.currentThread().getThreadGroup().activeCount();
         sender.sendMessage("§b服务器已运行§3:§r " + CommonUtils.tanMintoh(System.currentTimeMillis() - ManagementFactory.getRuntimeMXBean().getStartTime()) + "  §3线程数:§f" + threadcount);
-        sender.sendMessage("§b内存使用§3:§f " + max / 1024 / 1024 + "MB§7-§f" + use / 1024 / 1024 + "MB §7= §f" + MemFree.plugin.timer.Mem / 1024 / 1024 + "§7MB " + "  §b已启用: §f" + Runtime.getRuntime().totalMemory() / 1024 / 1024 + "§7MB");
+        sender.sendMessage("§b内存使用§3:§f " + max / 1024 / 1024 + "MB §7- §f" + use / 1024 / 1024 + "MB §7= §f" + MemFree.plugin.timer.Mem / 1024 / 1024 + "§7MB " + "  §b已启用: §f" + Runtime.getRuntime().totalMemory() / 1024 / 1024 + "§7MB");
         final long dt = ser.getWorldContainer().getTotalSpace();
         final long du = ser.getWorldContainer().getUsableSpace();
         final long duse = dt - du;
@@ -112,11 +112,16 @@ public class CommandManage extends CommandInterface {
         if (sender.hasPermission("memfree.moe")){
             for (World world : Bukkit.getWorlds()) {
                 Chunk[] chunk = world.getLoadedChunks();
-                int titles = 0;
+                int tiles = 0;
                 for (Chunk c : chunk) {
-                    titles += c.getTileEntities().length;
+                    tiles += c.getTileEntities().length;
                 }
-                sender.sendMessage(new StringBuilder().append("§b世界§f").append(world.getName()).append("§b已加载区块§f").append(chunk.length).append(" §b所有实体§f").append(world.getEntities().size()).append(" §b活动实体§f").append(world.getLivingEntities().size()).append(" §bTitles§f").append(titles).toString());
+                
+                sender.sendMessage(new StringBuilder().append("§b世界§f").append(world.getName())
+                        .append("§b已加载区块§f").append(chunk.length)
+                        .append(" §b所有实体§f").append(world.getEntities().size())
+                        .append(" §b活动实体§f").append(world.getLivingEntities().size())
+                        .append(" §bTiles§f").append(tiles).toString());
             }
         }
     }

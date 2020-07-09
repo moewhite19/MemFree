@@ -7,6 +7,7 @@ public class CommonUtils {
     private final static long hour = 3600000L;
     private final static long minute = 60000L;
     private final static long second = 1000L;
+
     public static long getTimeMintoh(String str) {
         if (str.isEmpty()) return 0;
         try{
@@ -41,29 +42,25 @@ public class CommonUtils {
 
     public static long toByteLength(String str) {
         if (str == null || str.isEmpty()) return 0;
-        try{
-            char e = str.charAt(str.length() - 1);
-            switch (e) {
-                case 'k':
-                case 'K': {
-                    str = str.substring(0,str.length() - 1);
-                    return Long.valueOf(str) * 1024L;
-                }
-                case 'm':
-                case 'M': {
-                    str = str.substring(0,str.length() - 1);
-                    return Long.valueOf(str) * 1048576L;
-                }
-                case 'g':
-                case 'G': {
-                    str = str.substring(0,str.length() - 1);
-                    return Long.valueOf(str) * 1073741824L;
-                }
+        char e = str.charAt(str.length() - 1);
+        switch (e) {
+            case 'k':
+            case 'K': {
+                str = str.substring(0,str.length() - 1);
+                return Long.valueOf(str) * 1024L;
             }
-            return Long.valueOf(str) * 1048576L;
-        }catch (NumberFormatException ex){
-            return 0;
+            case 'm':
+            case 'M': {
+                str = str.substring(0,str.length() - 1);
+                return Long.valueOf(str) * 1048576L;
+            }
+            case 'g':
+            case 'G': {
+                str = str.substring(0,str.length() - 1);
+                return Long.valueOf(str) * 1073741824L;
+            }
         }
+        return Long.valueOf(str) * 1048576L;
     }
 
     public static String tanMintoh(long l) {
@@ -124,8 +121,6 @@ public class CommonUtils {
         }
         return df.format(l / g) + "GB";
     }
-
-
 
 
 }

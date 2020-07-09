@@ -83,7 +83,7 @@ public class clearmap extends CommandInterface {
                         .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND,configCmd))
                         .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("点我确认删除").create()))
                         .create();
-                sender.sendMessage(cb);
+                sender.spigot().sendMessage(cb);
             }
         }
         return true;

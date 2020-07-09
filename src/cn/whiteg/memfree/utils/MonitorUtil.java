@@ -1,17 +1,17 @@
 package cn.whiteg.memfree.utils;
 
-import net.minecraft.server.v1_15_R1.*;
+import net.minecraft.server.v1_16_R1.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
-import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftMob;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftMob;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.function.Supplier;
 
 
 public class MonitorUtil {
@@ -29,7 +29,7 @@ public class MonitorUtil {
             con = (DedicatedServer) console_f.get(ser);
             tpsf = MinecraftServer.class.getDeclaredField("recentTps");
             tpsf.setAccessible(true);
-            chunkProvider = World.class.getDeclaredField("chunkProvider");
+            chunkProvider = WorldServer.class.getDeclaredField("chunkProvider");
             chunkProvider.setAccessible(true);
             playerChunkMap = ChunkProviderServer.class.getDeclaredField("playerChunkMap");
             playerChunkMap.setAccessible(true);
@@ -79,15 +79,9 @@ public class MonitorUtil {
     public static void setDistance(final org.bukkit.World world,final int cd) {
         if (world == null) return;
         try{
-            final WorldServer ws = ((CraftWorld) world).getHandle();
-            Field f = net.minecraft.server.v1_15_R1.World.class.getDeclaredField("chunkProvider");
-            f.setAccessible(true);
-            final ChunkProviderServer cps = (ChunkProviderServer) f.get(ws);
-            f = cps.getClass().getDeclaredField("playerChunkMap");
-            f.setAccessible(true);
-            PlayerChunkMap pcm = (PlayerChunkMap) f.get(cps);
-            f = pcm.getClass().getDeclaredField("viewDistance");
-            f.setAccessible(true);
+            WorldServer ws = ((CraftWorld) world).getHandle();
+            ChunkProviderServer cps = (ChunkProviderServer) chunkProvider.get(ws);
+            PlayerChunkMap pcm = (PlayerChunkMap) playerChunkMap.get(cps);
             final Method m = pcm.getClass().getDeclaredMethod("setViewDistance",int.class);
             m.setAccessible(true);
             m.invoke(pcm,cd);
@@ -109,10 +103,16 @@ public class MonitorUtil {
             entity.remove();
         }
         GameProfilerFiller mp = ne.world.getMethodProfiler();
+        Supplier supplier = new Supplier() {
+            @Override
+            public Object get() {
+                return mp;
+            }
+        };
         if (mp == null){
             entity.remove();
         }
-        PathfinderGoalSelector p = new PathfinderGoalSelector(mp);
+        PathfinderGoalSelector p = new PathfinderGoalSelector(supplier);
         ne.goalSelector = p;
         ne.targetSelector = p;
     }
