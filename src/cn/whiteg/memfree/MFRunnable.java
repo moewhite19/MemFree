@@ -41,7 +41,6 @@ public class MFRunnable {
         plugin = me;
         max = Runtime.getRuntime().maxMemory();
         lastGcTime = System.currentTimeMillis();
-
     }
 
 

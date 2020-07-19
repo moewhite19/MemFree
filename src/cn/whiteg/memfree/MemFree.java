@@ -2,6 +2,7 @@ package cn.whiteg.memfree;
 
 import cn.whiteg.memfree.Listener.PlayerListener;
 import cn.whiteg.memfree.utils.CommonUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 
 import java.util.logging.Logger;
@@ -37,7 +38,10 @@ public class MemFree extends PluginBase {
         regListener(new PlayerListener());
         if (DEBUG) getLogger().info("启用计时器");
         logger.info("已启用");
-        timer.setTimer();
+        //延迟启动
+        Bukkit.getScheduler().runTaskLater(this,() -> {
+            timer.setTimer();
+        },100);
     }
 
     public void onDisable() {
