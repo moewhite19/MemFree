@@ -15,7 +15,7 @@ import java.lang.management.ManagementFactory;
 import java.util.*;
 
 public class CommandManage extends CommandInterface {
-    final public List<String> allCmd = Arrays.asList("reload","clearchunk","clearmap","toggle","gc","onrestart","shell","monitor","distance","pdistance","test","stop");
+    final public List<String> allCmd = Arrays.asList("reload","clearchunk","clearmap","toggle","gc","onrestart","shell","monitor","distance","pdistance","test");
     final public Map<String, CommandInterface> commandMap = new HashMap<>(allCmd.size());
     final public SubCommand subCommand = new SubCommand(this);
 
