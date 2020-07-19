@@ -35,7 +35,6 @@ public class MFRunnable {
     private short maxwarin;
     private long runTick = 2;
     private long lastGcTime;
-    private Thread mainThread = null;
     private DenyRestart denyTask = null;
 
     public MFRunnable(MemFree me) {
@@ -151,13 +150,6 @@ public class MFRunnable {
                         Thread.sleep(tick);
                         if (st - updateTime > 120000){
                             if (Setting.AutoRestart){
-                                if (mainThread != null){
-                                    try{
-                                        mainThread.stop();
-                                    }catch (Exception e){
-                                        e.printStackTrace();
-                                    }
-                                }
                                 System.exit(9);
                             } else MemFree.logger.warning("服务器线程堵塞?");
                         }
@@ -254,10 +246,6 @@ public class MFRunnable {
             mfThread.setName("MemFreeTimer");
             mfThread.setDaemon(true);
             mfThread.start();
-            Bukkit.getScheduler().runTask(MemFree.plugin,() -> {
-                mainThread = Thread.currentThread();
-                MemFree.logger.info("已获取到主线程: " + mainThread.getName());
-            });
         }
     }
 
@@ -336,10 +324,6 @@ public class MFRunnable {
             return true;
         }
         return false;
-    }
-
-    public Thread getMainThread() {
-        return mainThread;
     }
 
     public class DenyRestart extends BukkitRunnable {
