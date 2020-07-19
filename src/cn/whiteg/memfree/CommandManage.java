@@ -116,7 +116,7 @@ public class CommandManage extends CommandInterface {
                 for (Chunk c : chunk) {
                     tiles += c.getTileEntities().length;
                 }
-                
+
                 sender.sendMessage(new StringBuilder().append("§b世界§f").append(world.getName())
                         .append("§b已加载区块§f").append(chunk.length)
                         .append(" §b所有实体§f").append(world.getEntities().size())

@@ -1,8 +1,10 @@
 #配置版本号
 var: 1
 debug: false
+#自动重启
 Auto_Restart: false
-MaxWaring: 25M
+#达到指定危险值开始重启
+MaxWaring: 25
 #最小内存
 minfree: 256M
 
