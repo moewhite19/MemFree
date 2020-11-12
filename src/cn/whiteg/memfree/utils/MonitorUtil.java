@@ -1,11 +1,12 @@
 package cn.whiteg.memfree.utils;
 
-import net.minecraft.server.v1_16_R1.*;
+import net.minecraft.server.v1_16_R3.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
-import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftMob;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_16_R3.CraftServer;
+import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftMob;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 
@@ -23,8 +24,9 @@ public class MonitorUtil {
 
     static {
         final Server ser = Bukkit.getServer();
+        Class<CraftServer> craftServer = CraftServer.class;
         try{
-            final Field console_f = ser.getClass().getDeclaredField("console");
+            final Field console_f = craftServer.getDeclaredField("console");
             console_f.setAccessible(true);
             con = (DedicatedServer) console_f.get(ser);
             tpsf = MinecraftServer.class.getDeclaredField("recentTps");
