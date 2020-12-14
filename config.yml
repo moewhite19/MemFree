@@ -18,6 +18,9 @@ restartDeny: 15
 onCommands:
   - "restart"
 
+#更新Map文件加载时间,已方便清理过时地图
+updateMapFileDate: false
+
 #自动GC
 AutoGC:
   Enable: false

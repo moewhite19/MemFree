@@ -1,6 +1,7 @@
 package cn.whiteg.memfree.commands;
 
 import cn.whiteg.memfree.CommandInterface;
+import cn.whiteg.memfree.Setting;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -54,12 +55,7 @@ public class clearmap extends CommandInterface {
                     return false;
                 }
                 fileList = new ArrayList<>();
-                File dataDir = new File("world" + File.separator + "data");
-                if (!dataDir.isDirectory()){
-                    sender.sendMessage("找不到world世界文件夹");
-                    return false;
-                }
-                for (File f : dataDir.listFiles()) {
+                for (File f : Setting.WORLD_DATA_DIR.listFiles()) {
                     if (f.isDirectory() || !f.getName().startsWith("map_")) continue;
                     long now = System.currentTimeMillis();
                     long modified = f.lastModified();

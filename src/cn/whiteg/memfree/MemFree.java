@@ -1,5 +1,6 @@
 package cn.whiteg.memfree;
 
+import cn.whiteg.memfree.Listener.MapUpdateListener;
 import cn.whiteg.memfree.Listener.PlayerListener;
 import cn.whiteg.memfree.utils.CommonUtils;
 import org.bukkit.Bukkit;
@@ -36,12 +37,16 @@ public class MemFree extends PluginBase {
             mfcmd.setTabCompleter(mainCmd);
         }
         regListener(new PlayerListener());
+        if (Setting.updateMapFileDate) regListener(new MapUpdateListener());
         if (DEBUG) getLogger().info("启用计时器");
         logger.info("已启用");
         //延迟启动
-        Bukkit.getScheduler().runTaskLater(this,() -> {
-            timer.setTimer();
-        },100);
+        Bukkit.getScheduler().runTask(this,() ->{
+            timer.start();
+        });
+//        Bukkit.getScheduler().runTaskLater(this,() -> {
+//            timer.start();
+//        },100);
     }
 
     public void onDisable() {

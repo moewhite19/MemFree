@@ -34,6 +34,8 @@ public class Setting {
     public static File[] autoClearUpWorlds = null;
     public static Long[] autoClearUpWhordsOffset = null;
     public static double MaxEntity_Range;
+    public static boolean updateMapFileDate;
+    public static File WORLD_DATA_DIR;
 
     static public void reload() {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(new File(MemFree.plugin.getDataFolder(),"config.yml"));
@@ -45,6 +47,7 @@ public class Setting {
         MemFree.logger.info("最小内存： " + CommonUtils.tanByte(minfree));
         Max_Warin = (short) config.getInt("MaxWaring",400);
         restartDeny = config.getInt("restartDeny",restartDeny) * 1000;
+        updateMapFileDate = config.getBoolean("updateMapFileDate");
         ConfigurationSection sc;
         if (config.getBoolean("MaxEntity.Enable",false)){
             sc = config.getConfigurationSection("MaxEntity.Entitys");
@@ -116,6 +119,11 @@ public class Setting {
                     }
                 }
             }
+        }
+
+        WORLD_DATA_DIR = new File("world" + File.separator + "data");
+        if (!WORLD_DATA_DIR.isDirectory()){
+            MemFree.logger.warning("找不到文件夹" + WORLD_DATA_DIR);
         }
 
     }
