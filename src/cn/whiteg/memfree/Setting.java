@@ -22,7 +22,6 @@ public class Setting {
     public static int DefMaxEntity;
     public static int RunTick;
     public static short Max_Warin;
-    public static int limElytra;
     public static boolean autoGc;
     public static long gcMinTick = 3600000L;
     public static int gcMinWarin = 3;
