@@ -1,6 +1,7 @@
 package cn.whiteg.memfree.commands;
 
 import cn.whiteg.memfree.CommandInterface;
+import cn.whiteg.memfree.HasCommandInterface;
 import cn.whiteg.memfree.utils.MonitorUtil;;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -10,24 +11,19 @@ import org.bukkit.command.CommandSender;
 import java.util.ArrayList;
 import java.util.List;
 
-public class distance extends CommandInterface {
+public class distance extends HasCommandInterface {
 
     @Override
-    public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
-
-        if (!sender.hasPermission("memfree.gc")){
-            sender.sendMessage("没有权限");
-            return true;
-        }
-        if (args.length == 1){
+    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+        if (args.length == 0){
             for (World world : Bukkit.getWorlds()) {
                 int ints = MonitorUtil.getDistance(world);
                 sender.sendMessage(world.getName() + "§b区块可见距离为§r" + ints);
             }
-        } else if (args.length == 2){
+        } else if (args.length == 1){
             int vd;
             try{
-                vd = Integer.valueOf(args[1]);
+                vd = Integer.parseInt(args[0]);
                 sender.sendMessage("所有世界视距已更新");
             }catch (Exception e){
                 //e.printStackTrace();
@@ -35,15 +31,15 @@ public class distance extends CommandInterface {
                 return true;
             }
             MonitorUtil.setDistance(vd);
-        } else if (args.length == 3){
-            World world = Bukkit.getWorld(args[1]);
+        } else if (args.length == 2){
+            World world = Bukkit.getWorld(args[0]);
             int vd;
             if (world == null){
                 sender.sendMessage("找不到世界");
                 return true;
             }
             try{
-                vd = Integer.valueOf(args[2]);
+                vd = Integer.parseInt(args[1]);
                 //sender.sendMessage("已修改视距为" + vd + "实体可见范围为" + ed);
             }catch (Exception e){
                 //e.printStackTrace();
@@ -61,16 +57,16 @@ public class distance extends CommandInterface {
 
 
     @Override
-    public List<String> onTabComplete(CommandSender sender,Command cmd,String label,String[] args) {
-        if (!sender.hasPermission("memfree.gc")){
-            sender.sendMessage("没有权限");
-            return null;
-        }
+    public List<String> completer(CommandSender sender,Command cmd,String label,String[] args) {
         List<String> worlds = new ArrayList<>();
         for (World world : Bukkit.getWorlds()) {
             worlds.add(world.getName());
-
         }
         return getMatches(worlds,args);
+    }
+
+    @Override
+    public boolean canUseCommand(CommandSender sender) {
+        return sender.hasPermission("whiteg.test");
     }
 }

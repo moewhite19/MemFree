@@ -1,6 +1,7 @@
 package cn.whiteg.memfree.commands;
 
 import cn.whiteg.memfree.CommandInterface;
+import cn.whiteg.memfree.HasCommandInterface;
 import cn.whiteg.memfree.Setting;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -14,19 +15,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class clearmap extends CommandInterface {
+public class clearmap extends HasCommandInterface {
     public static List<File> fileList = null;
 
-
     @Override
-    public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
-
-        if (!sender.hasPermission("whiteg.test")){
-            sender.sendMessage("没有权限");
-            return true;
-        }
-        if (args.length == 2){
-            String sta = args[1];
+    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+        if (args.length == 1){
+            String sta = args[0];
             if (sta.equals("confirm")){
                 if (fileList == null){
                     return false;
@@ -49,7 +44,7 @@ public class clearmap extends CommandInterface {
                 sender.sendMessage("清理地图文件");
                 double day;
                 try{
-                    day = Double.valueOf(args[1]);
+                    day = Double.parseDouble(args[0]);
                 }catch (NumberFormatException e){
                     sender.sendMessage("无效数值");
                     return false;
@@ -71,7 +66,7 @@ public class clearmap extends CommandInterface {
                     fileList = null;
                     return false;
                 }
-                String configCmd = "/mf " + args[0] + " confirm";
+                String configCmd = "/mf " + getName() + " confirm";
                 BaseComponent[] cb = new ComponentBuilder("找到 " + fileList.size() + " 个地图文件, 在输入一次指令或点击")
                         .color(ChatColor.AQUA)
                         .append(configCmd)
@@ -83,5 +78,9 @@ public class clearmap extends CommandInterface {
             }
         }
         return true;
+    }
+    @Override
+    public boolean canUseCommand(CommandSender sender) {
+        return sender.hasPermission("whiteg.test");
     }
 }

@@ -1,28 +1,24 @@
 package cn.whiteg.memfree.commands;
 
-import cn.whiteg.memfree.CommandInterface;
+import cn.whiteg.memfree.HasCommandInterface;
 import cn.whiteg.memfree.utils.ShellKit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+
 import java.util.List;
 
-public class shell extends CommandInterface {
+public class shell extends HasCommandInterface {
 
     @Override
-    public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
-
-        if (!sender.hasPermission("memfree.shell")){
-            sender.sendMessage("没有权限");
-            return true;
-        }
-        if (args.length > 1){
-            StringBuilder sb = new StringBuilder(args[1]);
-            int i = 2;
-            while (i < args.length){
+    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+        if (args.length > 0){
+            StringBuilder sb = new StringBuilder(args[0]);
+            int i = 1;
+            while (i < args.length) {
                 sb.append(" ").append(args[i]);
                 i++;
             }
-            String c = sb.toString().replace("&n" , "\n");
+            String c = sb.toString().replace("&n","\n");
             sender.sendMessage("执行命令: " + c);
             try{
                 sender.sendMessage(ShellKit.runShell(c).toString());
@@ -38,7 +34,12 @@ public class shell extends CommandInterface {
 
 
     @Override
-    public List<String> onTabComplete(CommandSender sender,Command cmd,String label,String[] args) {
+    public List<String> completer(CommandSender sender,Command cmd,String label,String[] args) {
         return null;
+    }
+
+    @Override
+    public boolean canUseCommand(CommandSender sender) {
+        return sender.hasPermission("memfree.shell");
     }
 }

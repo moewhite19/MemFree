@@ -4,7 +4,6 @@ import cn.whiteg.memfree.Listener.MapUpdateListener;
 import cn.whiteg.memfree.Listener.PlayerListener;
 import cn.whiteg.memfree.utils.CommonUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.command.PluginCommand;
 
 import java.util.logging.Logger;
 
@@ -23,25 +22,19 @@ public class MemFree extends PluginBase {
     public void onLoad() {
         //getLogger().info("加载配置文件");
         saveDefaultConfig();
-        minfree = CommonUtils.toByteLength(getConfig().getString("minfree","256m"));
-        mintps = getConfig().getDouble("mintps");
     }
 
     public void onEnable() {
         logger = getLogger();
         Setting.reload();
-        PluginCommand mfcmd = getCommand("MemFree");
-        if (mfcmd != null){
-            mainCmd = new CommandManage();
-            mfcmd.setExecutor(mainCmd);
-            mfcmd.setTabCompleter(mainCmd);
-        }
+        mainCmd = new CommandManage(this);
+        mainCmd.setExecutor();
         regListener(new PlayerListener());
         if (Setting.updateMapFileDate) regListener(new MapUpdateListener());
         if (DEBUG) getLogger().info("启用计时器");
         logger.info("已启用");
         //延迟启动
-        Bukkit.getScheduler().runTask(this,() ->{
+        Bukkit.getScheduler().runTask(this,() -> {
             timer.start();
         });
 //        Bukkit.getScheduler().runTaskLater(this,() -> {

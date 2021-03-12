@@ -1,6 +1,6 @@
 package cn.whiteg.memfree.commands;
 
-import cn.whiteg.memfree.CommandInterface;
+import cn.whiteg.memfree.HasCommandInterface;
 import cn.whiteg.memfree.utils.MonitorUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -11,32 +11,27 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
-public class pdistance extends CommandInterface {
+public class pdistance extends HasCommandInterface {
 
     @Override
-    public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
-
-        if (!sender.hasPermission("memfree.gc")){
-            sender.sendMessage("没有权限");
-            return true;
-        }
-        if (args.length == 1){
+    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+        if (args.length == 0){
             sender.sendMessage("没有参数");
             return false;
         }
-        final Player p = Bukkit.getPlayer(args[1]);
+        final Player p = Bukkit.getPlayer(args[0]);
         if (p == null){
             sender.sendMessage("找不到玩家");
             return false;
         }
-        if (args.length == 2){
+        if (args.length == 1){
             int ints = MonitorUtil.getDistance(p);
             sender.sendMessage("玩家" + p.getName() + "视距为" + ints);
 
-        } else if (args.length == 3){
+        } else if (args.length == 2){
             final int vd;
             try{
-                vd = Integer.valueOf(args[2]);
+                vd = Integer.parseInt(args[1]);
                 //sender.sendMessage("已修改视距为" + vd + "实体可见范围为" + ed);
             }catch (Exception e){
                 //e.printStackTrace();
@@ -54,7 +49,7 @@ public class pdistance extends CommandInterface {
 
 
     @Override
-    public List<String> onTabComplete(CommandSender sender,Command cmd,String label,String[] args) {
+    public List<String> completer(CommandSender sender,Command cmd,String label,String[] args) {
         if (args.length == 1){
             List<String> worlds = new ArrayList<>();
             for (World world : Bukkit.getWorlds()) {
@@ -63,5 +58,10 @@ public class pdistance extends CommandInterface {
             return getMatches(worlds,args);
         }
         return null;
+    }
+
+    @Override
+    public boolean canUseCommand(CommandSender sender) {
+        return sender.hasPermission("whiteg.test");
     }
 }

@@ -1,6 +1,6 @@
 package cn.whiteg.memfree.commands;
 
-import cn.whiteg.memfree.CommandInterface;
+import cn.whiteg.memfree.HasCommandInterface;
 import cn.whiteg.memfree.utils.CommonUtils;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class clearchunk extends CommandInterface {
+public class clearchunk extends HasCommandInterface {
     public static List<File> fileList = null;
 
     public static List<File> checkWorld(World world,double day) {
@@ -43,7 +43,6 @@ public class clearchunk extends CommandInterface {
 //    }
 
 
-
     public static File getWorldRegionDir(World world) {
         if (world.getEnvironment() == World.Environment.NORMAL){
             return new File(world.getName() + File.separator + "region");
@@ -54,14 +53,9 @@ public class clearchunk extends CommandInterface {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
-
-        if (!sender.hasPermission("whiteg.test")){
-            sender.sendMessage("没有权限");
-            return true;
-        }
-        if (args.length == 2){
-            String sta = args[1];
+    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+        if (args.length == 1){
+            String sta = args[0];
             if (fileList != null && sta.equals("confirm")){
                 int done = 0;
                 long size = 0;
@@ -112,16 +106,16 @@ public class clearchunk extends CommandInterface {
                 sender.sendMessage("无效参数");
                 return false;
             }
-        } else if (args.length == 3){
+        } else if (args.length == 2){
             sender.sendMessage("清理区块");
-            World world = Bukkit.getWorld(args[1]);
+            World world = Bukkit.getWorld(args[0]);
             if (world == null){
                 sender.sendMessage("世界不存在");
                 return false;
             }
             double day;
             try{
-                day = Double.valueOf(args[2]);
+                day = Double.parseDouble(args[1]);
             }catch (NumberFormatException e){
                 sender.sendMessage("无效数值");
                 return false;
@@ -132,7 +126,7 @@ public class clearchunk extends CommandInterface {
                 fileList = null;
                 return false;
             }
-            String configCmd = "/mf " + args[0] + " confirm";
+            String configCmd = "/mf " + getName() + " confirm";
             BaseComponent[] cb = new ComponentBuilder("找到 " + fileList.size() + " 个区域文件, 在输入一次指令或点击")
                     .color(ChatColor.AQUA)
                     .append(configCmd)
@@ -147,11 +141,7 @@ public class clearchunk extends CommandInterface {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender,Command cmd,String label,String[] args) {
-        if (!sender.hasPermission("memfree.gc")){
-            sender.sendMessage("没有权限");
-            return null;
-        }
+    public List<String> completer(CommandSender sender,Command cmd,String label,String[] args) {
         if (args.length == 2){
             List<String> worlds = new ArrayList<>();
             for (World world : Bukkit.getWorlds()) {
@@ -162,6 +152,10 @@ public class clearchunk extends CommandInterface {
             return getMatches(worlds,args);
         }
         return null;
+    }
 
+    @Override
+    public boolean canUseCommand(CommandSender sender) {
+        return sender.hasPermission("whiteg.test");
     }
 }

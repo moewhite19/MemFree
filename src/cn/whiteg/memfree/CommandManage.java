@@ -1,7 +1,7 @@
 package cn.whiteg.memfree;
 
 import cn.whiteg.memfree.utils.CommonUtils;
-import cn.whiteg.memfree.utils.MonitorUtil;
+import cn.whiteg.memfree.utils.PluginUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Server;
@@ -9,82 +9,89 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import cn.whiteg.memfree.utils.MonitorUtil;
 
 public class CommandManage extends CommandInterface {
-    final public List<String> allCmd = Arrays.asList("reload","clearchunk","clearmap","toggle","gc","onrestart","shell","monitor","distance","pdistance","test");
-    final public Map<String, CommandInterface> commandMap = new HashMap<>(allCmd.size());
-    final public SubCommand subCommand = new SubCommand(this);
+    public Map<String, CommandInterface> commandMap = new HashMap<>();
+    JavaPlugin plugin;
+    String path;
 
-    public CommandManage() {
-        for (int i = 0; i < allCmd.size(); i++) {
-            String cmd = allCmd.get(i);
-            try{
-                Class c = Class.forName("cn.whiteg.memfree.commands." + cmd);
-                CommandInterface ci = (CommandInterface) c.newInstance();
-                regCommand(cmd,ci);
-                PluginCommand pc = MemFree.plugin.getCommand(cmd);
-                if (pc != null){
-                    pc.setExecutor(subCommand);
-                    pc.setTabCompleter(subCommand);
+    public CommandManage(JavaPlugin plugin) {
+        this.plugin = plugin;
+        path = plugin.getClass().getPackage().getName().replace('.','/') + "/commands";
+        init();
+    }
+
+    public CommandManage(JavaPlugin plugin,String pack) {
+        this.plugin = plugin;
+        this.path = pack.replace('.','/');
+        init();
+    }
+
+    //初始化
+    private void init() {
+        try{
+            List<String> urls = PluginUtil.getUrls(plugin.getClass().getClassLoader(),false);
+            for (String url : urls) {
+                if (url.startsWith(path)){
+                    int i = url.indexOf(".class");
+                    if (i == -1) continue;
+                    String path = url.replace('/','.').substring(0,i);
+                    try{
+                        Class<?> clazz = Class.forName(path);
+                        if (CommandInterface.class.isAssignableFrom(clazz)){
+                            CommandInterface ci = null;
+                            //优先使用传入插件对象为参数的构造函数
+                            for (Constructor<?> constructor : clazz.getConstructors()) {
+                                Class<?>[] types = constructor.getParameterTypes();
+                                if (types.length == 1 && plugin.getClass().isAssignableFrom(types[0])){
+                                    ci = (CommandInterface) constructor.newInstance(plugin);
+                                    break;
+                                }
+                            }
+                            if (ci == null) ci = (CommandInterface) clazz.newInstance();
+                            registerCommand(ci);
+                        }
+                    }catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException e){
+                        plugin.getLogger().warning("无法构建指令: " + path);
+                        e.printStackTrace();
+                    }
                 }
-            }catch (ClassNotFoundException | InstantiationException | IllegalAccessException e){
-                MemFree.logger.warning("没有注册指令" + cmd + ": " + e.getMessage());
             }
+        }catch (IOException e){
+            e.printStackTrace();
         }
-    }
-
-    public static List<String> getMatches(List<String> list,String value) {
-        return getMatches(list,value);
-    }
-
-    public static List<String> PlayersList(String arg) {
-        List<String> players = new ArrayList<>();
-        for (Player p : Bukkit.getOnlinePlayers()) players.add(p.getName());
-        return getMatches(arg,players);
-    }
-
-    public static List<String> PlayersList(String[] arg) {
-        return PlayersList(arg[arg.length - 1]);
+        resizeMap();
     }
 
     @Override
     public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
         if (args.length == 0){
-            sta(sender);
-            return true;
+            return onMain(sender);
         }
-        CommandInterface c = commandMap.get(args[0]);
-        if (c != null){
-            return c.onCommand(sender,cmd,label,args);
+        CommandInterface subCommand = commandMap.get(args[0]);
+        if (subCommand != null){
+            if (args.length > 1){
+                String[] subArgs = new String[args.length - 1];
+                System.arraycopy(args,1,subArgs,0,subArgs.length);
+                return subCommand.onCommand(sender,cmd,label,subArgs);
+            } else {
+                return subCommand.onCommand(sender,cmd,label,new String[]{});
+            }
         } else {
             sender.sendMessage("无效指令");
         }
-        return true;
+        return false;
     }
 
-    @Override
-    public List<String> onTabComplete(CommandSender sender,Command cmd,String label,String[] args) {
-        if (args.length > 1){
-            List ls = null;
-            if (commandMap.containsKey(args[0])) ls = commandMap.get(args[0]).onTabComplete(sender,cmd,label,args);
-            if (ls != null){
-                return getMatches(args[args.length - 1],ls);
-            }
-        }
-        for (int i = 0; i < args.length; i++) {
-            args[i] = args[i].toLowerCase();
-        }
-        if (args.length == 1){
-            return getMatches(args[0],allCmd);
-        }
-        return null;
-    }
-
-    public void sta(CommandSender sender) {
+    public boolean onMain(CommandSender sender) {
         sender.sendMessage("§3[§bMemFree§3]");
         sender.sendMessage("§b当前计时器" + (MemFree.plugin.timer.isRun ? "§a已启用" : "§7未启用") + " §b自动重启" + (Setting.AutoRestart ? "§a已启用" : "§7未启用") + " §b危险程度:§b" + MemFree.plugin.timer.warin);
         long max = Runtime.getRuntime().maxMemory();
@@ -124,39 +131,64 @@ public class CommandManage extends CommandInterface {
                         .append(" §bTiles§f").append(tiles).toString());
             }
         }
-    }
-
-    public void regCommand(String var1,CommandInterface cmd) {
-        commandMap.put(var1,cmd);
+        return true;
     }
 
 
-    public static class SubCommand extends CommandInterface {
-        private final CommandManage commandManage;
-
-        SubCommand(CommandManage commandManage) {
-            this.commandManage = commandManage;
+    @Override
+    public List<String> onTabComplete(CommandSender sender,Command cmd,String label,String[] args) {
+        if (args.length == 1){
+            return getMatches(args[0].toLowerCase(),getCanUseCommands(sender));
+        } else if (args.length > 1){
+            CommandInterface subCommand = commandMap.get(args[0]);
+            if (subCommand != null){
+                String[] subArgs = new String[args.length - 1];
+                System.arraycopy(args,1,subArgs,0,subArgs.length);
+                return subCommand.onTabComplete(sender,cmd,label,subArgs);
+            }
         }
+        return null;
+    }
 
-        @Override
-        public boolean onCommand(CommandSender commandSender,Command command,String s,String[] strings) {
-            CommandInterface ci = commandManage.commandMap.get(command.getName());
-            if (ci == null) return false;
-            String[] args = new String[strings.length + 1];
-            args[0] = command.getName();
-            System.arraycopy(strings,0,args,1,strings.length);
-            ci.onCommand(commandSender,command,s,args);
-            return true;
-        }
+    //获取玩家可用指令列表
+    public List<String> getCanUseCommands(CommandSender sender) {
+        List<String> list = new ArrayList<>(commandMap.size());
+        commandMap.forEach((key,ci) -> {
+            if (ci.canUseCommand(sender)) list.add(key);
+        });
+        return list;
+    }
 
-        @Override
-        public List<String> onTabComplete(CommandSender commandSender,Command command,String s,String[] strings) {
-            CommandInterface ci = commandManage.commandMap.get(command.getName());
-            if (ci == null) return null;
-            String[] args = new String[strings.length + 1];
-            args[0] = command.getName();
-            System.arraycopy(strings,0,args,1,strings.length);
-            return ci.onTabComplete(commandSender,command,s,args);
+    public Map<String, CommandInterface> getCommandMap() {
+        return commandMap;
+    }
+
+    //注册指令
+    public void registerCommand(CommandInterface ci) {
+        String name = ci.getName();
+        commandMap.put(name,ci);
+        PluginCommand pc = plugin.getCommand(name);
+        if (pc != null){
+            pc.setExecutor(ci);
+            pc.setTabCompleter(ci);
         }
+    }
+
+    //构建完毕后固定map大小
+    public void resizeMap() {
+        commandMap = new HashMap<>(commandMap);
+    }
+
+    //设置指令执行器
+    public void setExecutor(String name) {
+        PluginCommand pc = plugin.getCommand(name);
+        if (pc != null){
+            pc.setExecutor(this);
+            pc.setTabCompleter(this);
+        }
+    }
+
+    public void setExecutor() {
+        setExecutor(plugin.getName().toLowerCase());
     }
 }

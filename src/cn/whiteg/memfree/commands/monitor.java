@@ -1,6 +1,6 @@
 package cn.whiteg.memfree.commands;
 
-import cn.whiteg.memfree.CommandInterface;
+import cn.whiteg.memfree.HasCommandInterface;
 import cn.whiteg.memfree.MemFree;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -15,14 +15,14 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 
 import java.util.List;
 
-public class monitor extends CommandInterface implements Listener {
+public class monitor extends HasCommandInterface implements Listener {
     private CommandSender mder;
     private MemFree plugin;
     private int x = 0;
     private int z = 0;
 
-    public monitor() {
-        plugin = MemFree.plugin;
+    public monitor(MemFree pl) {
+        plugin = pl;
     }
 
     @EventHandler
@@ -45,20 +45,15 @@ public class monitor extends CommandInterface implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        if (mder == null) return;
         if (mder instanceof Player){
-            if (event.getPlayer().getName().equals(mder.getName())){
+            if (mder == event.getPlayer()){
                 unreg();
             }
         }
     }
 
     @Override
-    public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
-        if (!sender.hasPermission("memfree.gc")){
-            sender.sendMessage("没有权限");
-            return true;
-        }
+    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
         if (mder != null){
             unreg();
             sender.sendMessage("取消监听");
@@ -106,5 +101,10 @@ public class monitor extends CommandInterface implements Listener {
     @Override
     public List<String> onTabComplete(CommandSender sender,Command cmd,String label,String[] args) {
         return null;
+    }
+
+    @Override
+    public boolean canUseCommand(CommandSender sender) {
+        return sender.hasPermission("whiteg.test");
     }
 }

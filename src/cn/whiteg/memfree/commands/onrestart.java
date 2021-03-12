@@ -1,36 +1,28 @@
 package cn.whiteg.memfree.commands;
 
-import cn.whiteg.memfree.CommandInterface;
-import cn.whiteg.memfree.MFRunnable;
-import cn.whiteg.memfree.MemFree;
-import cn.whiteg.memfree.Setting;
+import cn.whiteg.memfree.*;
 import cn.whiteg.memfree.utils.CommonUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 import java.util.List;
 
-public class onrestart extends CommandInterface {
+public class onrestart extends HasCommandInterface {
 
     @Override
-    public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
-
-        if (!sender.hasPermission("memfree.gc")){
-            sender.sendMessage("没有权限");
-            return false;
-        }
+    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
         MFRunnable t = MemFree.plugin.timer;
 
         long dny;
-        if (args.length > 1){
-            dny = CommonUtils.getTimeMintoh(args[1]);
+        if (args.length > 0){
+            dny = CommonUtils.getTimeMintoh(args[0]);
         } else {
             dny = Setting.restartDeny;
         }
 
         long time;
-        if (args.length > 2){
-            time = CommonUtils.getTimeMintoh(args[2]);
+        if (args.length > 1){
+            time = CommonUtils.getTimeMintoh(args[1]);
         } else {
             time = 0;
         }
@@ -56,5 +48,10 @@ public class onrestart extends CommandInterface {
     @Override
     public List<String> onTabComplete(CommandSender sender,Command cmd,String label,String[] args) {
         return null;
+    }
+
+    @Override
+    public boolean canUseCommand(CommandSender sender) {
+        return sender.hasPermission("whiteg.test");
     }
 }
