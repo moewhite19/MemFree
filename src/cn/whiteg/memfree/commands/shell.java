@@ -10,7 +10,7 @@ import java.util.List;
 public class shell extends HasCommandInterface {
 
     @Override
-    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+    public boolean executo(CommandSender sender,Command cmd,String label,String[] args) {
         if (args.length > 0){
             StringBuilder sb = new StringBuilder(args[0]);
             int i = 1;
@@ -34,7 +34,7 @@ public class shell extends HasCommandInterface {
 
 
     @Override
-    public List<String> completer(CommandSender sender,Command cmd,String label,String[] args) {
+    public List<String> complete(CommandSender sender,Command cmd,String label,String[] args) {
         return null;
     }
 

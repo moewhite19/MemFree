@@ -14,7 +14,7 @@ import java.util.List;
 public class distance extends HasCommandInterface {
 
     @Override
-    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+    public boolean executo(CommandSender sender,Command cmd,String label,String[] args) {
         if (args.length == 0){
             for (World world : Bukkit.getWorlds()) {
                 int ints = MonitorUtil.getDistance(world);
@@ -57,7 +57,7 @@ public class distance extends HasCommandInterface {
 
 
     @Override
-    public List<String> completer(CommandSender sender,Command cmd,String label,String[] args) {
+    public List<String> complete(CommandSender sender,Command cmd,String label,String[] args) {
         List<String> worlds = new ArrayList<>();
         for (World world : Bukkit.getWorlds()) {
             worlds.add(world.getName());

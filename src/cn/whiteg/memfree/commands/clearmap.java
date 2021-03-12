@@ -19,7 +19,7 @@ public class clearmap extends HasCommandInterface {
     public static List<File> fileList = null;
 
     @Override
-    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+    public boolean executo(CommandSender sender,Command cmd,String label,String[] args) {
         if (args.length == 1){
             String sta = args[0];
             if (sta.equals("confirm")){

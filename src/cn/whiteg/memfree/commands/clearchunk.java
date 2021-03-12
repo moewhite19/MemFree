@@ -53,7 +53,7 @@ public class clearchunk extends HasCommandInterface {
     }
 
     @Override
-    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+    public boolean executo(CommandSender sender,Command cmd,String label,String[] args) {
         if (args.length == 1){
             String sta = args[0];
             if (fileList != null && sta.equals("confirm")){
@@ -141,7 +141,7 @@ public class clearchunk extends HasCommandInterface {
     }
 
     @Override
-    public List<String> completer(CommandSender sender,Command cmd,String label,String[] args) {
+    public List<String> complete(CommandSender sender,Command cmd,String label,String[] args) {
         if (args.length == 2){
             List<String> worlds = new ArrayList<>();
             for (World world : Bukkit.getWorlds()) {

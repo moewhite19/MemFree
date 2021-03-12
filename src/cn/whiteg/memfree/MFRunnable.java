@@ -59,7 +59,7 @@ public class MFRunnable extends BukkitRunnable {
     }
 
 
-    public void Restart() {
+    public void onRestart() {
         List<String> commands = plugin.getConfig().getStringList("onCommands");
         new BukkitRunnable() {
             Iterator<String> it = commands.iterator();
@@ -101,23 +101,11 @@ public class MFRunnable extends BukkitRunnable {
         if (Runer == null) return;
         Runer.cancel();
         Runer = null;
-//        try{
-//            mfThread.stop();
-//        }catch (Exception e){
-//            e.printStackTrace();
-//        }
         mfThread = null;
         isRun = false;
         logger.info("已关闭计时器");
     }
 
-
-    public void sendCommand(List<String> commands) {
-        for (int i = 0; i < commands.size(); i++) {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),commands.get(i).replace("&","§"));
-            //stopTimer();
-        }
-    }
 
     public boolean hasRestart() {
         return denyTask != null;
@@ -247,7 +235,7 @@ public class MFRunnable extends BukkitRunnable {
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                     onlinePlayer.kickPlayer("§f服务器似乎内存满了,\n请等待1分钟服务器重启完成后再加入服务器. \n§l期待与您再见.");
                 }
-                Restart();
+                onRestart();
                 stop();
             } else {
                 if (bar != null){
@@ -396,6 +384,7 @@ public class MFRunnable extends BukkitRunnable {
                     e.printStackTrace();
                 }
             }
+            logger.info("线程已关闭");
         }
     }
 }

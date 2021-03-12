@@ -53,7 +53,7 @@ public class monitor extends HasCommandInterface implements Listener {
     }
 
     @Override
-    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+    public boolean executo(CommandSender sender,Command cmd,String label,String[] args) {
         if (mder != null){
             unreg();
             sender.sendMessage("取消监听");

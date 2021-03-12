@@ -10,7 +10,7 @@ import java.util.List;
 public class toggle extends HasCommandInterface {
 
     @Override
-    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+    public boolean executo(CommandSender sender,Command cmd,String label,String[] args) {
         if (MemFree.plugin.timer.isRun){
             MemFree.plugin.timer.stopTimer();
         } else {

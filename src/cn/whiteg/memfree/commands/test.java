@@ -11,7 +11,7 @@ public class test extends HasCommandInterface {
     final String p = "[System.gc()]";
 
     @Override
-    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+    public boolean executo(CommandSender sender,Command cmd,String label,String[] args) {
 
         if (!sender.hasPermission("memfree.gc")){
             sender.sendMessage("没有权限");

@@ -11,7 +11,7 @@ import java.util.List;
 public class gc extends HasCommandInterface {
     final String p = "[System.gc()]";
     @Override
-    public boolean executor(CommandSender sender,Command cmd,String label,String[] args) {
+    public boolean executo(CommandSender sender,Command cmd,String label,String[] args) {
         Bukkit.broadcastMessage(p + "服务器开始强制回收内存,可能会有短暂卡顿");
         long n = System.currentTimeMillis();
         final Runtime r = Runtime.getRuntime();
