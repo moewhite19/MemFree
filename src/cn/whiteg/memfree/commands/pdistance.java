@@ -49,18 +49,6 @@ public class pdistance extends HasCommandInterface {
 
 
     @Override
-    public List<String> complete(CommandSender sender,Command cmd,String label,String[] args) {
-        if (args.length == 1){
-            List<String> worlds = new ArrayList<>();
-            for (World world : Bukkit.getWorlds()) {
-                worlds.add(world.getName());
-            }
-            return getMatches(worlds,args);
-        }
-        return null;
-    }
-
-    @Override
     public boolean canUseCommand(CommandSender sender) {
         return sender.hasPermission("whiteg.test");
     }

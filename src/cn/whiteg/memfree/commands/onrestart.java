@@ -11,7 +11,7 @@ public class onrestart extends HasCommandInterface {
 
     @Override
     public boolean executo(CommandSender sender,Command cmd,String label,String[] args) {
-        MFRunnable t = MemFree.plugin.timer;
+        MFRunnable timer = MemFree.plugin.timer;
 
         long dny;
         if (args.length > 0){
@@ -31,13 +31,13 @@ public class onrestart extends HasCommandInterface {
             sender.sendMessage("参数有误");
             return false;
         }
-        if (t.stopRestart()){
+        if (timer.stopRestart()){
             sender.sendMessage("已停止重启倒计时");
         } else {
             if (time > 0){
-                t.denyShwtdown(dny,time);
+                timer.denyShwtdown(dny,time);
             } else {
-                t.denyShwtdown(dny);
+                timer.denyShwtdown(dny);
             }
             sender.sendMessage("已设置重启倒计时:" + CommonUtils.tanMintoh(dny));
         }

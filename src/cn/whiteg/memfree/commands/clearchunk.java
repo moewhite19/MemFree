@@ -142,12 +142,11 @@ public class clearchunk extends HasCommandInterface {
 
     @Override
     public List<String> complete(CommandSender sender,Command cmd,String label,String[] args) {
-        if (args.length == 2){
+        if (args.length == 1){
             List<String> worlds = new ArrayList<>();
             for (World world : Bukkit.getWorlds()) {
                 worlds.add(world.getName());
                 worlds.addAll(Arrays.asList("poi","confirm"));
-
             }
             return getMatches(worlds,args);
         }

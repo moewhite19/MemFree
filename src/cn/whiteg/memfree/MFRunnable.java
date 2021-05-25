@@ -33,7 +33,6 @@ public class MFRunnable extends BukkitRunnable {
     private long date = 0;
     private long updateTime = 0;
     private BukkitTask Runer;
-    private short maxwarin;
     private long runTick = 2;
     private long lastGcTime;
     private DenyRestart denyTask = null;
@@ -80,21 +79,35 @@ public class MFRunnable extends BukkitRunnable {
     }
 
     public void denyShwtdown(long dny) {
-        stopRestart();
-        new DenyRestart(dny);
+        if (denyTask == null){
+            denyTask = new DenyRestart(dny);
+        } else {
+            logger.warning("延时重启已存在");
+        }
     }
 
     public void denyShwtdown(long dny,long time) {
-        stopRestart();
-        new DenyRestart(dny,time);
+        if (denyTask == null){
+            denyTask = new DenyRestart(dny,time);
+        } else {
+            logger.warning("延时重启已存在");
+        }
+    }
+
+    public boolean stopRestart() {
+        if (denyTask != null){
+            denyTask.stop();
+            denyTask = null;
+            return true;
+        }
+        return false;
     }
 
     public void denyShwtdown() {
         if (denyTask != null){
             return;
         }
-        int time = Setting.restartDeny;
-        denyShwtdown(time);
+        denyShwtdown(Setting.restartDeny);
     }
 
     public void stopTimer() {
@@ -115,13 +128,6 @@ public class MFRunnable extends BukkitRunnable {
         return denyTask;
     }
 
-    public boolean stopRestart() {
-        if (denyTask != null){
-            denyTask.stop();
-            return true;
-        }
-        return false;
-    }
 
     @Override
     public void run() {
@@ -214,7 +220,6 @@ public class MFRunnable extends BukkitRunnable {
             dny = s;
             last = System.currentTimeMillis();
             runTaskTimer(MemFree.plugin,20L,20L);
-            denyTask = this;
         }
 
         public DenyRestart(long s,long time) {
@@ -222,7 +227,6 @@ public class MFRunnable extends BukkitRunnable {
             dny = s;
             last = System.currentTimeMillis();
             runTaskTimer(MemFree.plugin,20L,20L);
-            denyTask = this;
         }
 
         @Override
@@ -280,7 +284,6 @@ public class MFRunnable extends BukkitRunnable {
         public void run() {
             final long tick = runTick * 1000;
             warin = 0;
-            maxwarin = Setting.Max_Warin;
             try{
                 Thread.sleep(5000L);
             }catch (InterruptedException e){
@@ -290,14 +293,17 @@ public class MFRunnable extends BukkitRunnable {
                 try{
                     long st = System.currentTimeMillis();
                     Thread.sleep(tick);
+                    //当服务器线程堵塞时
                     if (st - updateTime > 120000){
+                        MemFree.logger.warning("服务器线程堵塞?");
                         if (Setting.AutoRestart){
+                            MonitorUtil.killMe();
                             System.exit(9);
-                        } else MemFree.logger.warning("服务器线程堵塞?");
+                        }
                     }
                     if ((st - updateTime) > tick * 2){
                         warin++;
-                        if (warin > maxwarin){
+                        if (warin > Setting.Max_Warin){
                             if (Setting.AutoRestart) denyShwtdown();
                             else MemFree.logger.warning("服务器可能需要重启");
                         }
@@ -321,13 +327,13 @@ public class MFRunnable extends BukkitRunnable {
                             Bukkit.broadcastMessage("内存回收完成,回收了" + now_m / 1024 / 1024 + "MB内存 耗时" + (System.currentTimeMillis() - n) + "ms");
                             continue;
                         }
-                        if (warin > maxwarin){
+                        if (warin > Setting.Max_Warin){
                             if (Setting.AutoRestart) denyShwtdown();
                             else MemFree.logger.warning("服务器可能需要重启");
                         }
                     } else if (tps < Setting.mintps){
                         warin++;
-                        if (warin > maxwarin){
+                        if (warin > Setting.Max_Warin){
                             if (Setting.AutoRestart) denyShwtdown();
                             else MemFree.logger.warning("服务器可能需要重启");
                         }

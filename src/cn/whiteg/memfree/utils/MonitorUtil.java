@@ -9,9 +9,14 @@ import org.bukkit.craftbukkit.v1_16_R3.entity.CraftMob;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.jline.utils.ShutdownHooks;
+import org.spigotmc.WatchdogThread;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.function.Supplier;
 
 
@@ -119,4 +124,49 @@ public class MonitorUtil {
         ne.targetSelector = p;
     }
 
+
+    public static void clearShutdownHooks() {
+        try{
+            var f = ShutdownHooks.class.getDeclaredField("tasks");
+            f.setAccessible(true);
+            List<ShutdownHooks.Task> list = (List<ShutdownHooks.Task>) f.get(false);
+            list.clear();
+        }catch (NoSuchFieldException | IllegalAccessException e){
+            e.printStackTrace();
+        }
+    }
+
+    public static void forgeStop() {
+        clearShutdownHooks();
+        var tt = Thread.currentThread();
+        Thread.getAllStackTraces().forEach((thread,stackTraceElements) -> {
+            if (thread == tt) return;
+            try{
+                thread.stop();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        });
+    }
+
+    public static void killMe() {
+        File file = new File("kill.sh");
+        String path;
+        try{
+            path = file.getCanonicalPath();
+        }catch (IOException e){
+            path = file.getPath();
+        }
+        if (file.exists()){
+            System.out.println("run " + path);
+            try{
+                Runtime.getRuntime().exec(path);
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("no fire: " + path);
+            forgeStop();
+        }
+    }
 }

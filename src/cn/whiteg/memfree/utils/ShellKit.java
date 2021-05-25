@@ -30,7 +30,6 @@ public class ShellKit {
      * @throws IOException 注:如果sh中含有awk,一定要按new String[]{"/bin/sh","-c",shStr}写,才可以获得流.
      */
     public static List<String> runShell(String shStr) throws Exception {
-        List<String> strList = new ArrayList<String>();
         Process process;
         process = Runtime.getRuntime().exec(new String[]{"/bin/sh","-c",shStr},null,null);
         InputStreamReader ir = new InputStreamReader(process
@@ -38,6 +37,7 @@ public class ShellKit {
         LineNumberReader input = new LineNumberReader(ir);
         String line;
         process.waitFor();
+        List<String> strList = new ArrayList<String>();
         while ((line = input.readLine()) != null) {
             strList.add(line);
         }
