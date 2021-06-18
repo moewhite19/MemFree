@@ -1,16 +1,23 @@
 package cn.whiteg.memfree.utils;
 
-import net.minecraft.server.v1_16_R3.*;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.server.level.ChunkProviderServer;
+import net.minecraft.server.level.EntityPlayer;
+import net.minecraft.server.level.PlayerChunkMap;
+import net.minecraft.server.level.WorldServer;
+import net.minecraft.util.profiling.GameProfilerFiller;
+import net.minecraft.world.entity.EntityInsentient;
+import net.minecraft.world.entity.ai.goal.PathfinderGoalSelector;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
-import org.bukkit.craftbukkit.v1_16_R3.CraftServer;
-import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftMob;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.libs.jline.internal.ShutdownHooks;
+import org.bukkit.craftbukkit.v1_17_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftMob;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
-import org.jline.utils.ShutdownHooks;
-import org.spigotmc.WatchdogThread;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,11 +43,11 @@ public class MonitorUtil {
             con = (DedicatedServer) console_f.get(ser);
             tpsf = MinecraftServer.class.getDeclaredField("recentTps");
             tpsf.setAccessible(true);
-            chunkProvider = WorldServer.class.getDeclaredField("chunkProvider");
+            chunkProvider = WorldServer.class.getDeclaredField("C");
             chunkProvider.setAccessible(true);
-            playerChunkMap = ChunkProviderServer.class.getDeclaredField("playerChunkMap");
+            playerChunkMap = ChunkProviderServer.class.getDeclaredField("a");
             playerChunkMap.setAccessible(true);
-            viewDistance = PlayerChunkMap.class.getDeclaredField("viewDistance");
+            viewDistance = PlayerChunkMap.class.getDeclaredField("J");
             viewDistance.setAccessible(true);
 
         }catch (Exception e){
@@ -106,13 +113,15 @@ public class MonitorUtil {
     public static void clearEntityAI(Mob entity) {
         EntityInsentient ne = (((CraftMob) entity).getHandle());
 //        PathfinderGoalSelector p = new PathfinderGoalSelector(null);
-        if (ne.world == null){
+        var world = ne.t;
+        if (world == null){
             entity.remove();
+            return;
         }
-        GameProfilerFiller mp = ne.world.getMethodProfiler();
-        Supplier supplier = new Supplier() {
+        GameProfilerFiller mp = world.getMethodProfiler();
+        Supplier<GameProfilerFiller> supplier = new Supplier<>() {
             @Override
-            public Object get() {
+            public GameProfilerFiller get() {
                 return mp;
             }
         };
@@ -120,8 +129,8 @@ public class MonitorUtil {
             entity.remove();
         }
         PathfinderGoalSelector p = new PathfinderGoalSelector(supplier);
-        ne.goalSelector = p;
-        ne.targetSelector = p;
+        ne.bO = p;
+        ne.bP = p;
     }
 
 
