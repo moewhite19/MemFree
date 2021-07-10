@@ -15,6 +15,25 @@ import static cn.whiteg.memfree.MemFree.logger;
 import static cn.whiteg.memfree.Setting.*;
 
 public class EntitySpawn implements Listener {
+    //同步执行器
+//    Executor syncExecutor = new Executor() {
+//        @Override
+//        public void execute(Runnable runnable) {
+//            Bukkit.getScheduler().runTask(MemFree.plugin,() -> {
+//                runnable.run();
+//                synchronized (runnable) {
+//                    runnable.notify();
+//                }
+//            });
+//            synchronized (runnable) {
+//                try{
+//                    runnable.wait();
+//                }catch (InterruptedException e){
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    };
     private WeakReference<Chunk> cacheChunk = new WeakReference<>(null);
     private int number = 0;
     // private Map<EntityType, Integer> ets = new EnumMap<EntityType, Integer>(EntityType.class);
@@ -24,7 +43,7 @@ public class EntitySpawn implements Listener {
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onEntitySpawn(EntitySpawnEvent event) {
         Entity entity = event.getEntity();
-        if (entity == null || entity.getType() == EntityType.PLAYER) return;
+        if (entity.getType() == EntityType.PLAYER) return;
         Chunk chunk = entity.getLocation().getChunk();
         int chunkX = chunk.getX();
         int chunkZ = chunk.getZ();
@@ -53,7 +72,6 @@ public class EntitySpawn implements Listener {
                */
             if (DEBUG){
                 logger.info("以阻止 " + chunk.getWorld() + " " + chunkX + " " + chunkZ + " 的实体" + entity.getType().toString() + "生成 , 该区块实体数量达到" + number + " 同类型数量" + entitynum);
-
             }
         } else if (DEBUG){
             logger.info("区块 " + chunk.getWorld() + " " + chunkX + " " + chunkZ + " 实体" + entity.getType().toString() + "生成 , 区块实体数量" + number + " 同类型数量" + entitynum);

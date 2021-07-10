@@ -35,6 +35,7 @@ public class Setting {
     public static double MaxEntity_Range;
     public static boolean updateMapFileDate;
     public static File WORLD_DATA_DIR;
+    public static int entityExplosion = 0;
 
     static public void reload() {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(new File(MemFree.plugin.getDataFolder(),"config.yml"));
@@ -47,6 +48,7 @@ public class Setting {
         Max_Warin = (short) config.getInt("MaxWaring",400);
         restartDeny = config.getInt("restartDeny",restartDeny) * 1000;
         updateMapFileDate = config.getBoolean("updateMapFileDate");
+        entityExplosion = config.getInt("EntityExplosion",entityExplosion);
         ConfigurationSection sc;
         if (config.getBoolean("MaxEntity.Enable",false)){
             sc = config.getConfigurationSection("MaxEntity.Entitys");

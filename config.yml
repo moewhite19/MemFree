@@ -42,7 +42,10 @@ AutoClearUpWorld:
     world_the_end: 10
     world_nether: 10
 
-#区块实体生成限制器
+#防止区块实体堆积的数量 小于1关闭
+EntityExplosion: 8848
+
+#区块实体限制器
 MaxEntity:
   Enable: false
   #用清理AI代替移除

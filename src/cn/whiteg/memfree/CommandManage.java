@@ -1,7 +1,9 @@
 package cn.whiteg.memfree;
 
 import cn.whiteg.memfree.utils.CommonUtils;
+import cn.whiteg.memfree.utils.MonitorUtil;
 import cn.whiteg.memfree.utils.PluginUtil;
+import net.minecraft.SharedConstants;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Server;
@@ -16,7 +18,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import cn.whiteg.memfree.utils.MonitorUtil;
 
 public class CommandManage extends CommandInterface {
     public Map<String, CommandInterface> commandMap = new HashMap<>();
@@ -92,12 +93,12 @@ public class CommandManage extends CommandInterface {
     }
 
     public boolean onMain(CommandSender sender) {
-        sender.sendMessage("§3[§bMemFree§3]");
+        sender.sendMessage("§3[§bMemFree§3] §b当前服务器版本:§a" + SharedConstants.getGameVersion().getName());
         sender.sendMessage("§b当前计时器" + (MemFree.plugin.timer.isRun ? "§a已启用" : "§7未启用") + " §b自动重启" + (Setting.AutoRestart ? "§a已启用" : "§7未启用") + " §b危险程度:§b" + MemFree.plugin.timer.warin);
         long max = Runtime.getRuntime().maxMemory();
         long use = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
-        sender.sendMessage("§b内存使用率§3:§f " + String.format("%.2f",use / (double) max * 100) + "%");
+        sender.sendMessage("§b内存使用率§3:§f " + String.format("%.2f%%",use / (double) max * 100) + String.format(" §b在线玩家§f%d/%d",Bukkit.getOnlinePlayers().size(),Bukkit.getMaxPlayers()));
         Server ser = Bukkit.getServer();
         String[] dtps = null;
         double[] o = MonitorUtil.getTps();

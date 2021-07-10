@@ -31,7 +31,7 @@ public class MFRunnable extends BukkitRunnable {
     Iterator<? extends Player> playersIt = Bukkit.getOnlinePlayers().iterator();
     private MemFree plugin;
     private long date = 0;
-    private long updateTime = 0;
+    private long updateTime = System.currentTimeMillis();
     private BukkitTask Runer;
     private long runTick = 2;
     private long lastGcTime;
@@ -138,6 +138,7 @@ public class MFRunnable extends BukkitRunnable {
         date = System.currentTimeMillis();
         //Mem = (Mem + free) / 2;
         tps = runTick * 1000 / ((float) runTime) * 20;
+        //检查密集实体
         if (Setting.MaxEntity != null){
             if (playersIt.hasNext()){
                 Player player = playersIt.next();
@@ -154,12 +155,12 @@ public class MFRunnable extends BukkitRunnable {
                         Integer lim = Setting.MaxEntity.getOrDefault(type,Setting.DefMaxEntity);
                         Integer i = map.getOrDefault(type,0) + 1;
                         if (i > lim){
-                            if (e instanceof Villager){
+                            if (e instanceof Villager villager){
                                 //村民没法删除AI  那就给他凋零效果吧
-                                ((Villager) e).addPotionEffect(new PotionEffect(PotionEffectType.WITHER,100,1));
+                                villager.addPotionEffect(new PotionEffect(PotionEffectType.WITHER,100,1));
 //                                            e.remove();
-                            } else if (e instanceof Mob){
-                                MonitorUtil.clearEntityAI((Mob) e);
+                            } else if (e instanceof Mob mob){
+                                MonitorUtil.clearEntityAI(mob);
                                 f = true;
                                 ite.remove();
                             } else {

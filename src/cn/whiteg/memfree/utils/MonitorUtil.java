@@ -11,7 +11,6 @@ import net.minecraft.world.entity.EntityInsentient;
 import net.minecraft.world.entity.ai.goal.PathfinderGoalSelector;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
-import org.bukkit.craftbukkit.libs.jline.internal.ShutdownHooks;
 import org.bukkit.craftbukkit.v1_17_R1.CraftServer;
 import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftMob;
@@ -119,12 +118,7 @@ public class MonitorUtil {
             return;
         }
         GameProfilerFiller mp = world.getMethodProfiler();
-        Supplier<GameProfilerFiller> supplier = new Supplier<>() {
-            @Override
-            public GameProfilerFiller get() {
-                return mp;
-            }
-        };
+        Supplier<GameProfilerFiller> supplier = () -> mp;
         if (mp == null){
             entity.remove();
         }
@@ -133,30 +127,6 @@ public class MonitorUtil {
         ne.bP = p;
     }
 
-
-    public static void clearShutdownHooks() {
-        try{
-            var f = ShutdownHooks.class.getDeclaredField("tasks");
-            f.setAccessible(true);
-            List<ShutdownHooks.Task> list = (List<ShutdownHooks.Task>) f.get(false);
-            list.clear();
-        }catch (NoSuchFieldException | IllegalAccessException e){
-            e.printStackTrace();
-        }
-    }
-
-    public static void forgeStop() {
-        clearShutdownHooks();
-        var tt = Thread.currentThread();
-        Thread.getAllStackTraces().forEach((thread,stackTraceElements) -> {
-            if (thread == tt) return;
-            try{
-                thread.stop();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        });
-    }
 
     public static void killMe() {
         File file = new File("kill.sh");
@@ -175,7 +145,6 @@ public class MonitorUtil {
             }
         } else {
             System.out.println("no fire: " + path);
-            forgeStop();
         }
     }
 }

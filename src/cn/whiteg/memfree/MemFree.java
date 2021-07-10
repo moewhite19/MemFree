@@ -1,13 +1,13 @@
 package cn.whiteg.memfree;
 
+import cn.whiteg.memfree.Listener.EntityExplosion;
 import cn.whiteg.memfree.Listener.MapUpdateListener;
 import cn.whiteg.memfree.Listener.PlayerListener;
-import cn.whiteg.memfree.utils.CommonUtils;
 import org.bukkit.Bukkit;
 
 import java.util.logging.Logger;
 
-import static cn.whiteg.memfree.Setting.*;
+import static cn.whiteg.memfree.Setting.DEBUG;
 
 public class MemFree extends PluginBase {
     public static Logger logger;
@@ -30,6 +30,7 @@ public class MemFree extends PluginBase {
         mainCmd = new CommandManage(this);
         mainCmd.setExecutor();
         regListener(new PlayerListener());
+        regListener(new EntityExplosion());
         if (Setting.updateMapFileDate) regListener(new MapUpdateListener());
         if (DEBUG) getLogger().info("启用计时器");
         logger.info("已启用");

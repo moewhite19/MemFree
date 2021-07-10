@@ -68,9 +68,9 @@ public class clearchunk extends HasCommandInterface {
                             size += f.length();
                             f.delete();
                             done++;
-                            File poidir = new File(f.getParentFile().getParentFile(),"poi");
-                            if (poidir.isDirectory()){
-                                File poi = new File(poidir,name);
+                            File dir = new File(f.getParentFile().getParentFile(),"poi");
+                            if (dir.isDirectory()){
+                                File poi = new File(dir,name);
                                 size += poi.length();
                                 if (poi.exists()){
                                     psize += poi.length();
@@ -78,6 +78,18 @@ public class clearchunk extends HasCommandInterface {
                                     pdone++;
                                 }
                             }
+
+                            dir = new File(f.getParentFile().getParentFile(),"entities");
+                            if (dir.isDirectory()){
+                                File poi = new File(dir,name);
+                                size += poi.length();
+                                if (poi.exists()){
+                                    psize += poi.length();
+                                    poi.delete();
+                                    pdone++;
+                                }
+                            }
+
                         }catch (Exception e){
                             sender.sendMessage("清理失败" + name);
                             e.printStackTrace();
@@ -90,16 +102,10 @@ public class clearchunk extends HasCommandInterface {
                 for (World world : Bukkit.getWorlds()) {
                     File regionDir = getWorldRegionDir(world);
                     if (!regionDir.isDirectory()) continue;
-                    File poiDir = new File(regionDir.getParentFile(),"poi");
-                    if (!poiDir.isDirectory()) continue;
-                    for (File file : poiDir.listFiles()) {
-                        String name = file.getName();
-                        File nf = new File(regionDir,name);
-                        if (!nf.exists()){
-                            file.delete();
-                            done++;
-                        }
-                    }
+                    File dir = new File(regionDir.getParentFile(),"poi");
+                    done = clean(done,regionDir,dir);
+                    dir = new File(regionDir.getParentFile(),"entities");
+                    done = clean(done,regionDir,dir);
                 }
                 sender.sendMessage("清理了 " + done + " 个无效poi文件");
             } else {
@@ -138,6 +144,20 @@ public class clearchunk extends HasCommandInterface {
 //            sender.sendMessage("总共" + fileList.size() + "个区域文件, 在输入一次指令或点击§a/mf " + args[0] + " confirm §r确认删除");
         }
         return true;
+    }
+
+    private int clean(int done,File regionDir,File dir) {
+        if (dir.isDirectory()){
+            for (File file : dir.listFiles()) {
+                String name = file.getName();
+                File nf = new File(regionDir,name);
+                if (!nf.exists()){
+                    file.delete();
+                    done++;
+                }
+            }
+        }
+        return done;
     }
 
     @Override
