@@ -1,5 +1,6 @@
 package cn.whiteg.memfree.utils;
 
+import cn.whiteg.memfree.reflection.FieldAccessor;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ChunkProviderServer;
@@ -22,7 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.function.Supplier;
 
 
@@ -32,6 +33,7 @@ public class MonitorUtil {
     private static Field chunkProvider;
     private static Field playerChunkMap;
     private static Field viewDistance;
+    private static FieldAccessor<PathfinderGoalSelector>[] pathfinderGoalSelectors;
 
     static {
         final Server ser = Bukkit.getServer();
@@ -48,7 +50,13 @@ public class MonitorUtil {
             playerChunkMap.setAccessible(true);
             viewDistance = PlayerChunkMap.class.getDeclaredField("J");
             viewDistance.setAccessible(true);
-
+            ArrayList<FieldAccessor<PathfinderGoalSelector>> list = new ArrayList<>(3);
+            for (Field field : EntityInsentient.class.getFields()) {
+                if (field.getType().equals(PathfinderGoalSelector.class)){
+                    list.add(new FieldAccessor<>(field));
+                }
+            }
+            pathfinderGoalSelectors = list.toArray(new FieldAccessor[0]);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -123,8 +131,11 @@ public class MonitorUtil {
             entity.remove();
         }
         PathfinderGoalSelector p = new PathfinderGoalSelector(supplier);
-        ne.bO = p;
-        ne.bP = p;
+        for (FieldAccessor<PathfinderGoalSelector> pathfinderGoalSelector : pathfinderGoalSelectors) {
+            pathfinderGoalSelector.set(ne,p);
+        }
+//        ne.bQ = p;
+//        ne.bP = p;
     }
 
 
