@@ -1,0 +1,167 @@
+package cn.whiteg.memfree.utils;
+
+import cn.whiteg.memfree.reflection.FieldAccessor;
+import com.destroystokyo.paper.util.misc.PlayerAreaMap;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.server.level.ChunkProviderServer;
+import net.minecraft.server.level.PlayerChunkMap;
+import net.minecraft.server.level.WorldServer;
+import net.minecraft.util.profiling.GameProfilerFiller;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityInsentient;
+import net.minecraft.world.entity.ai.goal.PathfinderGoalSelector;
+import net.minecraft.world.level.World;
+import org.bukkit.Bukkit;
+import org.bukkit.Server;
+import org.bukkit.entity.Mob;
+import org.bukkit.entity.Player;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.function.Supplier;
+
+
+public class MonitorUtil {
+    private static Field tpsf;
+    private static DedicatedServer con;
+    private static Field chunkProvider;
+    private static Field playerChunkMap;
+    private static FieldAccessor<Integer> viewDistance;
+    private static FieldAccessor<PathfinderGoalSelector>[] pathfinderGoalSelectors;
+    private static Method getGameProfilerFiller;
+
+    private static FieldAccessor<WorldServer> nmsWorldField;
+    private static FieldAccessor<Entity> nmsEntityField;
+    private static Map<World, PathfinderGoalSelector> pathCacheMap = new WeakHashMap<>();
+
+    static {
+        final Server ser = Bukkit.getServer();
+        final String packageName = ser.getClass().getName();
+        final String CRAFT_ROOT = "org.bukkit.craftbukkit." + packageName.split("\\.")[3]; //服务端版本号
+        try{
+            final Field console_f = MonitorUtil.class.getClassLoader().loadClass(CRAFT_ROOT + ".CraftServer").getDeclaredField("console");
+            console_f.setAccessible(true);
+            con = (DedicatedServer) console_f.get(ser);
+            tpsf = MinecraftServer.class.getDeclaredField("recentTps");
+            tpsf.setAccessible(true);
+            chunkProvider = NMSUtils.getFieldFormType(WorldServer.class,ChunkProviderServer.class);
+            chunkProvider.setAccessible(true);
+            playerChunkMap = NMSUtils.getFieldFormType(ChunkProviderServer.class,PlayerChunkMap.class);
+            playerChunkMap.setAccessible(true);
+            viewDistance = new FieldAccessor<>(NMSUtils.getFieldFormStructure(PlayerChunkMap.class,int.class,PlayerAreaMap.class)[0]);
+            ArrayList<FieldAccessor<PathfinderGoalSelector>> list = new ArrayList<>(3);
+            for (Field field : EntityInsentient.class.getFields()) {
+                if (field.getType().equals(PathfinderGoalSelector.class)){
+                    list.add(new FieldAccessor<>(field));
+                }
+            }
+            //ToArrayCallWithZeroLengthArrayArgument
+            pathfinderGoalSelectors = list.toArray(new FieldAccessor[list.size()]);
+            nmsWorldField = new FieldAccessor<>(NMSUtils.getFieldFormType(MonitorUtil.class.getClassLoader().loadClass(CRAFT_ROOT + ".CraftWorld"),WorldServer.class));
+            nmsEntityField = new FieldAccessor<>(NMSUtils.getFieldFormType(MonitorUtil.class.getClassLoader().loadClass(CRAFT_ROOT + ".entity.CraftEntity"),Entity.class));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        for (Method method : World.class.getMethods()) {
+            if (method.getReturnType().equals(GameProfilerFiller.class)){
+                getGameProfilerFiller = method;
+                break;
+            }
+        }
+    }
+
+    public static double[] getTps() {
+        try{
+            //con.setMotd(name);
+            return (double[]) tpsf.get(con);
+        }catch (Exception e){
+            return null;
+        }
+    }
+
+    public static int getDistance(final Player player) {
+        return player.getViewDistance();
+    }
+
+    public static void setDistance(final Player player,final int d) {
+        player.setViewDistance(d);
+//        cp.getClientViewDistance();
+//        EntityPlayer nmsplayer = cp.getHandle();
+//        nmsplayer.clientViewDistance = d;
+    }
+
+    public static int getDistance(final org.bukkit.World world) {
+        if (world == null) return 0;
+        try{
+            WorldServer ws = nmsWorldField.get(world);
+            ChunkProviderServer cps = (ChunkProviderServer) chunkProvider.get(ws);
+            PlayerChunkMap pcm = (PlayerChunkMap) playerChunkMap.get(cps);
+            //m = pcm.getClass().getMethod("")
+            return viewDistance.get(pcm);
+        }catch (Exception e){
+            return 0;
+        }
+    }
+
+    public static void setDistance(final org.bukkit.World world,final int viewDistance) {
+        if (world == null) return;
+        try{
+            var ws = nmsWorldField.get(world);
+            ChunkProviderServer cps = (ChunkProviderServer) chunkProvider.get(ws);
+            PlayerChunkMap pcm = (PlayerChunkMap) playerChunkMap.get(cps);
+            MonitorUtil.viewDistance.set(pcm,viewDistance);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public static void setDistance(final int cd) {
+        for (org.bukkit.World world : Bukkit.getWorlds()) {
+            setDistance(world,cd);
+        }
+    }
+
+    public static void clearEntityAI(Mob entity) {
+        EntityInsentient ne = (EntityInsentient) getNmsEntity(entity);
+        if (ne == null) return;
+//        PathfinderGoalSelector p = new PathfinderGoalSelector(null);
+        final PathfinderGoalSelector goalSelector = createPathfinderGoalSelector(ne);
+        if(goalSelector == null) entity.remove();
+        for (FieldAccessor<PathfinderGoalSelector> pathfinderGoalSelector : pathfinderGoalSelectors) {
+            pathfinderGoalSelector.set(ne,goalSelector);
+        }
+    }
+
+    public static PathfinderGoalSelector createPathfinderGoalSelector(EntityInsentient ne){
+        var world = ne.s;
+        return pathCacheMap.computeIfAbsent(world,world1 -> {
+            GameProfilerFiller mp;
+            try{
+                mp = (GameProfilerFiller) getGameProfilerFiller.invoke(world);
+            }catch (IllegalAccessException | InvocationTargetException e){
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+            Supplier<GameProfilerFiller> supplier = () -> mp;
+            if (mp == null){
+                return null;
+            }
+            return new PathfinderGoalSelector(supplier);
+        });
+    }
+
+
+    public static void killMe() {
+        Runtime.getRuntime().halt(9);
+    }
+
+    public static Entity getNmsEntity(org.bukkit.entity.Entity entity) {
+        return nmsEntityField.get(entity);
+    }
+}

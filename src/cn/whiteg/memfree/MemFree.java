@@ -1,38 +1,50 @@
 package cn.whiteg.memfree;
 
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.plugin.java.JavaPlugin;
+import cn.whiteg.memfree.Listener.EntityExplosion;
+import cn.whiteg.memfree.Listener.MapUpdateListener;
+import cn.whiteg.memfree.Listener.PlayerListener;
+import org.bukkit.Bukkit;
 
-public class MemFree extends JavaPlugin {
-    MFRunnable timer = new MFRunnable();
-    private playerexit exitev;
-    long minfree;
-    private static MemFree INSTANCE;
+import java.util.logging.Logger;
+
+import static cn.whiteg.memfree.Setting.DEBUG;
+
+public class MemFree extends PluginBase {
+    public static Logger logger;
+    public static MemFree plugin;
+    public MFRunnable timer = new MFRunnable(this);
+    public CommandManage mainCmd;
 
     public MemFree() {
+        plugin = this;
     }
+
     public void onLoad() {
-        getLogger().info("加载配置文件");
         saveDefaultConfig();
-        minfree = getConfig().getLong("minfree") * 1024 * 1024;
+        logger = getLogger();
     }
 
     public void onEnable() {
-        INSTANCE = this;
-        //exitev = new playerexit();
-        //Bukkit.getPluginManager().registerEvents(this.exitev,this);
-        getCommand("MemFree").setExecutor(new CommandManager());
-        timer.setTimer();
-        getLogger().info("已启用");
+        Setting.reload();
+        mainCmd = new CommandManage(this);
+        mainCmd.setExecutor();
+        regListener(new PlayerListener());
+        regListener(new EntityExplosion());
+        if (Setting.updateMapFileDate) regListener(new MapUpdateListener());
+        if (DEBUG) getLogger().info("启用计时器");
+        logger.info("已启用");
+        //延迟启动
+        Bukkit.getScheduler().runTask(this,() -> {
+            timer.start();
+        });
     }
 
     public void onDisable() {
-        InventoryClickEvent.getHandlerList().unregister(exitev);
-        timer.stopTimer();
-        getLogger().info("已关闭");
-    }
+        if (Bukkit.isStopping()) return; //当服务器正在关闭时不注销计时器
 
-    public static MemFree in() {
-        return INSTANCE;
+        unregListener();
+        timer.stopTimer();
+        timer = null;
+        getLogger().info("已关闭");
     }
 }

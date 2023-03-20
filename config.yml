@@ -1,16 +1,97 @@
 #配置版本号
-var: 1
-#最小内存（单位MB）
-minfree: 256
+var: 2
+debug: false
+#自动重启
+Auto_Restart: false
+#达到指定预警值开始重启
+MaxWaring: 25
+#最小内存
+minfree: 256M
+
+#最小TPS
+mintps: 8
 #检测间隔 （单位 秒）
-runTick: 25
-#内存小于设定的值时执行
-commands:
-  - "say §b 服务器内存满啦,需要重启释放内存."
-  - "say §b 服务器将在5秒后重启"
-#延迟(单位 秒)
-onTime: 5
-#延迟执行指令
+runTick: 1
+#重启延时(单位 秒)
+restartDeny: 15
+#重启指令
 onCommands:
-  - "kickall &f服务器需要重启释放内存,请等待30秒服务器重启完成后再加入服务器. 期待与您再见."
   - "restart"
+
+#防止线程堵塞时无法重启服务器,最大等待时间
+ShutdownHookWaitTime: '2m'
+
+#更新Map文件加载时间,已方便清理过时地图
+updateMapFileDate: false
+
+#自动GC
+AutoGC:
+  Enable: false
+  #最小危险值
+  minWarin: 3
+  #最小回收间隔
+  minTick: 1H
+
+#当储存空间不足时自动清理世界区域,多世界可选
+AutoClearUpWorld:
+  Enable: false
+  #每次清理的区域文件数量
+  ClearNumber: 64
+  #当剩余空间剩余多少时触发删除
+  MinFreeSpace: 64M
+  #清理的世界白名单，当区块最后访问时间距离现在小于多少天时跳过
+  Worlds:
+    world: 40
+    world_the_end: 10
+    world_nether: 10
+
+#自动删除日志,有时当插件发生StackOverflowError等异常时会疯狂刷新日志导致服务端硬盘被日志占满
+AutoCleanLog:
+  Enable: false
+  #最大值
+  MaxSize: 256M
+  #日志文件路径(通常这个不需要改，有需要时可以添加额外的日志文件监听)
+  Files:
+    - 'logs/latest.log'
+  #当文件列表里有文件夹时，将一整个文件夹的文件相加来计算大小和清理
+  Dir2OneFile: 'false'
+
+#防止区块实体堆积的数量 小于1关闭(大量实体在区块内堆积可能会造成服务器线程堵塞，异常卡顿，玩家客户端卡死崩溃等异常)
+EntityExplosion: 8848
+
+#区块实体限制器
+MaxEntity:
+  Enable: false
+  #用清理AI代替移除
+  ClearAI: true
+  Range: 32
+  DefMaxEntity: 32
+  Entitys:
+    DROPPED_ITEM: 512
+    ITEM_FRAME: 128
+    ARMOR_STAND: 128
+    VILLAGER: 30
+    IRON_GOLEM: 16
+    CHICKEN: 16
+    PIG: 16
+    COW: 16
+    CAT: 16
+    WOLF: 16
+    SHEEP: 16
+    TURTLE: 16
+    BEE: 26
+    DOLPHIN: 26
+    ZOMBIE: 26
+    PILLAGER: 26
+    ARROW: 64
+    BAT: 16
+    SKELETON: 26
+    CREEPER: 26
+    ENDERMAN: 26
+
+
+#添加为虚拟机添加属性
+SystemProperties:
+  #java.net.useSystemProxies: 'true' #使用系统代理
+  #socksProxyHost: '127.0.0.1' #Socks5代理服务器IP
+  #socksProxyPort: '1080' #Socks5代理端口
