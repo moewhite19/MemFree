@@ -4,6 +4,7 @@ import cn.whiteg.memfree.utils.CommonUtils;
 import cn.whiteg.memfree.utils.MonitorUtil;
 import cn.whiteg.memfree.utils.NMSUtils;
 import cn.whiteg.memfree.utils.PluginUtil;
+import net.minecraft.MinecraftVersion;
 import net.minecraft.SharedConstants;
 import net.minecraft.WorldVersion;
 import org.bukkit.Bukkit;
@@ -26,7 +27,6 @@ public class CommandManage extends CommandInterface {
     public Map<String, CommandInterface> commandMap = new HashMap<>();
     JavaPlugin plugin;
     String path;
-    private String SERVER_VER;
 
     public CommandManage(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -64,7 +64,8 @@ public class CommandManage extends CommandInterface {
                             if (ci == null) ci = (CommandInterface) clazz.newInstance();
                             registerCommand(ci);
                         }
-                    }catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException e){
+                    }catch (ClassNotFoundException | InvocationTargetException | InstantiationException |
+                            IllegalAccessException e){
                         plugin.getLogger().warning("无法构建指令: " + path);
                         e.printStackTrace();
                     }
@@ -81,17 +82,6 @@ public class CommandManage extends CommandInterface {
                     }
                     break;
                 }
-            }
-
-//            SharedConstants.getGameVersion().getName();
-            try{
-                Field field = NMSUtils.getFieldFormType(SharedConstants.class,WorldVersion.class);
-                field.setAccessible(true);
-                WorldVersion ver = (WorldVersion) field.get(null);
-                SERVER_VER = ver == null ? "NULL" : ver.getName();
-            }catch (IllegalAccessException | NoSuchFieldException e){
-                e.printStackTrace();
-                SERVER_VER = e.getMessage();
             }
         }catch (IOException e){
             e.printStackTrace();
@@ -121,7 +111,7 @@ public class CommandManage extends CommandInterface {
 
     public boolean onMain(CommandSender sender) {
         var timer = MemFree.plugin.timer;
-        sender.sendMessage("§3[§bMemFree§3] §b当前服务器版本:§a" + SERVER_VER);
+        sender.sendMessage("§3[§bMemFree§3] §b当前服务器版本:§a" + MonitorUtil.SERVER_VER);
         sender.sendMessage("§b当前计时器" + (timer.isRun ? "§a开启" : "§7关闭") + " §b自动重启" + (Setting.AutoRestart ? "§a开启" : "§7关闭") + " §b预警值:§f" + MemFree.plugin.timer.warin);
         long max = Runtime.getRuntime().maxMemory();
         long use = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();

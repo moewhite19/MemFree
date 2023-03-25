@@ -2,6 +2,9 @@ package cn.whiteg.memfree.utils;
 
 import cn.whiteg.memfree.reflection.FieldAccessor;
 import com.destroystokyo.paper.util.misc.PlayerAreaMap;
+import net.minecraft.MinecraftVersion;
+import net.minecraft.SharedConstants;
+import net.minecraft.WorldVersion;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ChunkProviderServer;
@@ -27,17 +30,20 @@ import java.util.function.Supplier;
 
 
 public class MonitorUtil {
-    private static Field tpsf;
+    private static FieldAccessor<double[]> recentTps;
     private static DedicatedServer con;
-    private static Field chunkProvider;
-    private static Field playerChunkMap;
+    private static FieldAccessor<ChunkProviderServer> chunkProvider;
+    private static FieldAccessor<PlayerChunkMap> playerChunkMap;
     private static FieldAccessor<Integer> viewDistance;
     private static FieldAccessor<PathfinderGoalSelector>[] pathfinderGoalSelectors;
+    private static FieldAccessor<World> entityWorld;
     private static Method getGameProfilerFiller;
 
     private static FieldAccessor<WorldServer> nmsWorldField;
     private static FieldAccessor<Entity> nmsEntityField;
     private static Map<World, PathfinderGoalSelector> pathCacheMap = new WeakHashMap<>();
+
+    public static String SERVER_VER;
 
     static {
         final Server ser = Bukkit.getServer();
@@ -47,12 +53,9 @@ public class MonitorUtil {
             final Field console_f = MonitorUtil.class.getClassLoader().loadClass(CRAFT_ROOT + ".CraftServer").getDeclaredField("console");
             console_f.setAccessible(true);
             con = (DedicatedServer) console_f.get(ser);
-            tpsf = MinecraftServer.class.getDeclaredField("recentTps");
-            tpsf.setAccessible(true);
-            chunkProvider = NMSUtils.getFieldFormType(WorldServer.class,ChunkProviderServer.class);
-            chunkProvider.setAccessible(true);
-            playerChunkMap = NMSUtils.getFieldFormType(ChunkProviderServer.class,PlayerChunkMap.class);
-            playerChunkMap.setAccessible(true);
+            recentTps = new FieldAccessor<>(MinecraftServer.class.getDeclaredField("recentTps"));
+            chunkProvider = new FieldAccessor<>(NMSUtils.getFieldFormType(WorldServer.class,ChunkProviderServer.class));
+            playerChunkMap = new FieldAccessor<>(NMSUtils.getFieldFormType(ChunkProviderServer.class,PlayerChunkMap.class));
             viewDistance = new FieldAccessor<>(NMSUtils.getFieldFormStructure(PlayerChunkMap.class,int.class,PlayerAreaMap.class)[0]);
             ArrayList<FieldAccessor<PathfinderGoalSelector>> list = new ArrayList<>(3);
             for (Field field : EntityInsentient.class.getFields()) {
@@ -64,8 +67,21 @@ public class MonitorUtil {
             pathfinderGoalSelectors = list.toArray(new FieldAccessor[list.size()]);
             nmsWorldField = new FieldAccessor<>(NMSUtils.getFieldFormType(MonitorUtil.class.getClassLoader().loadClass(CRAFT_ROOT + ".CraftWorld"),WorldServer.class));
             nmsEntityField = new FieldAccessor<>(NMSUtils.getFieldFormType(MonitorUtil.class.getClassLoader().loadClass(CRAFT_ROOT + ".entity.CraftEntity"),Entity.class));
+            entityWorld = new FieldAccessor<>(NMSUtils.getFieldFormType(Entity.class,World.class));
         }catch (Exception e){
             e.printStackTrace();
+        }
+
+        try{
+            Field field = NMSUtils.getFieldFormType(SharedConstants.class,WorldVersion.class);
+            field.setAccessible(true);
+            MinecraftVersion ver = (MinecraftVersion) field.get(null);
+            final Field getNameField = NMSUtils.getFieldFormType(MinecraftVersion.class,String.class);
+            getNameField.setAccessible(true);
+            SERVER_VER = (String) getNameField.get(ver);
+        }catch (IllegalAccessException | NoSuchFieldException e){
+            e.printStackTrace();
+            SERVER_VER = e.getMessage();
         }
 
         for (Method method : World.class.getMethods()) {
@@ -79,7 +95,7 @@ public class MonitorUtil {
     public static double[] getTps() {
         try{
             //con.setMotd(name);
-            return (double[]) tpsf.get(con);
+            return recentTps.get(con);
         }catch (Exception e){
             return null;
         }
@@ -132,14 +148,14 @@ public class MonitorUtil {
         if (ne == null) return;
 //        PathfinderGoalSelector p = new PathfinderGoalSelector(null);
         final PathfinderGoalSelector goalSelector = createPathfinderGoalSelector(ne);
-        if(goalSelector == null) entity.remove();
+        if (goalSelector == null) entity.remove();
         for (FieldAccessor<PathfinderGoalSelector> pathfinderGoalSelector : pathfinderGoalSelectors) {
             pathfinderGoalSelector.set(ne,goalSelector);
         }
     }
 
-    public static PathfinderGoalSelector createPathfinderGoalSelector(EntityInsentient ne){
-        var world = ne.s;
+    public static PathfinderGoalSelector createPathfinderGoalSelector(EntityInsentient ne) {
+        var world = entityWorld.get(ne);
         return pathCacheMap.computeIfAbsent(world,world1 -> {
             GameProfilerFiller mp;
             try{
