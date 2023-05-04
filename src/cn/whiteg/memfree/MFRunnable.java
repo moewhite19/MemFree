@@ -146,18 +146,19 @@ public class MFRunnable implements Listener {
         if (Setting.MaxEntity != null){
             if (playersIt.hasNext()){
                 Player player = playersIt.next();
-                if (!player.isOnline() || player.isDead() || player.getViewDistance() < player.getWorld().getViewDistance()) return; //如果玩家不在线，或者视距小于世界视距跳出
+                if (!player.isOnline() || player.isDead() || player.getViewDistance() < player.getWorld().getViewDistance())
+                    return; //如果玩家不在线，或者视距小于世界视距跳出
                 List<Entity> entitys = player.getNearbyEntities(Setting.MaxEntity_Range,512D,Setting.MaxEntity_Range);
                 if (Setting.clearAI){
                     boolean flag = false;
                     EnumMap<EntityType, Integer> map = new EnumMap<>(EntityType.class);
                     for (Entity entity : entitys) {
-                        if(entity instanceof HumanEntity) continue;
+                        if (entity instanceof HumanEntity) continue;
                         EntityType type = entity.getType();
                         int lim = Setting.MaxEntity.getOrDefault(type,Setting.DefMaxEntity);
                         int i = map.getOrDefault(type,0) + 1;
                         map.put(type,i);
-                        if(! flag && i > lim) flag = true; //如果有超出限制的实体，下面重新遍历一遍
+                        if (!flag && i > lim) flag = true; //如果有超出限制的实体，下面重新遍历一遍
                     }
                     if (flag){
                         for (Entity e : entitys) {
@@ -313,7 +314,7 @@ public class MFRunnable implements Listener {
                         MemFree.logger.warning("线程堵塞超过" + CommonUtils.tanMintoh(Setting.shutdownHookWaitTime));
                         if (Setting.AutoRestart){
                             MemFree.logger.warning("强制终止进程");
-                            Runtime.getRuntime().halt(9);
+                            MonitorUtil.killMe();
                         }
                     }
                     if (!taskIsDone){

@@ -71,18 +71,19 @@ public class CommandManage extends CommandInterface {
                     }
                 }
             }
-            for (Field field : SharedConstants.class.getDeclaredFields()) {
-                if (field.getType().equals(WorldVersion.class)){
-                    field.setAccessible(true);
-                    try{
-                        WorldVersion v = (WorldVersion) field.get(null);
-
-                    }catch (IllegalAccessException e){
-                        e.printStackTrace();
-                    }
-                    break;
-                }
-            }
+//            todo 不知道什么时候的未完成指令
+//            for (Field field : SharedConstants.class.getDeclaredFields()) {
+//                if (field.getType().equals(WorldVersion.class)){
+//                    field.setAccessible(true);
+//                    try{
+//                        WorldVersion v = (WorldVersion) field.get(null);
+//
+//                    }catch (IllegalAccessException e){
+//                        e.printStackTrace();
+//                    }
+//                    break;
+//                }
+//            }
         }catch (IOException e){
             e.printStackTrace();
         }
