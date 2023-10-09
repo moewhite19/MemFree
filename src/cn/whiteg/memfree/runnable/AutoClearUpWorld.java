@@ -70,32 +70,28 @@ public record AutoClearUpWorld(int clearUpNumber,long minFreeSpace,Map<File, Lon
             long size = 0;
             int pdone = 0;
             int psize = 0;
-            for (File region : regionCache) {
-                if (region == null) break;
-                if (region.exists()){
-                    String name = region.getName();
+            for (File regionFile : regionCache) {
+                if (regionFile == null) break; //到null说明后面不会有数据了
+                if (regionFile.exists()){
+                    String name = regionFile.getName();
                     try{
-                        size += region.length();
-                        if (region.delete()) continue;
+                        if (!regionFile.delete()) continue;
                         done++;
-                        File dir = new File(region.getParentFile().getParentFile(),"poi");
+                        size += regionFile.length();
+                        File dir = new File(regionFile.getParentFile().getParentFile(),"poi");
                         if (dir.isDirectory()){
                             File poi = new File(dir,name);
-                            size += poi.length();
-                            if (poi.exists()){
+                            if (poi.exists() && poi.delete()){
                                 psize += poi.length();
-                                poi.delete();
                                 pdone++;
                             }
                         }
 
-                        dir = new File(region.getParentFile().getParentFile(),"entities");
+                        dir = new File(regionFile.getParentFile().getParentFile(),"entities");
                         if (dir.isDirectory()){
                             File poi = new File(dir,name);
-                            size += poi.length();
-                            if (poi.exists()){
+                            if (poi.exists() && poi.delete()){
                                 psize += poi.length();
-                                poi.delete();
                                 pdone++;
                             }
                         }

@@ -140,31 +140,27 @@ public class clearchunk extends HasCommandInterface {
                 long size = 0;
                 int pdone = 0;
                 int psize = 0;
-                for (File region : fileList) {
-                    if (region.exists()){
-                        String name = region.getName();
+                for (File regionFile : fileList) {
+                    if (regionFile != null && regionFile.exists()){
+                        String name = regionFile.getName();
                         try{
-                            size += region.length();
-                            region.delete();
+                            if (!regionFile.delete()) continue;
                             done++;
-                            File dir = new File(region.getParentFile().getParentFile(),"poi");
+                            size += regionFile.length();
+                            File dir = new File(regionFile.getParentFile().getParentFile(),"poi");
                             if (dir.isDirectory()){
                                 File poi = new File(dir,name);
-                                size += poi.length();
-                                if (poi.exists()){
+                                if (poi.exists() && poi.delete()){
                                     psize += poi.length();
-                                    poi.delete();
                                     pdone++;
                                 }
                             }
 
-                            dir = new File(region.getParentFile().getParentFile(),"entities");
+                            dir = new File(regionFile.getParentFile().getParentFile(),"entities");
                             if (dir.isDirectory()){
                                 File poi = new File(dir,name);
-                                size += poi.length();
-                                if (poi.exists()){
+                                if (poi.exists() && poi.delete()){
                                     psize += poi.length();
-                                    poi.delete();
                                     pdone++;
                                 }
                             }

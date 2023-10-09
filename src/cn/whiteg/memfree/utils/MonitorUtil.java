@@ -2,6 +2,7 @@ package cn.whiteg.memfree.utils;
 
 import cn.whiteg.memfree.reflection.FieldAccessor;
 import com.destroystokyo.paper.util.misc.PlayerAreaMap;
+import io.papermc.paper.chunk.system.RegionizedPlayerChunkLoader;
 import net.minecraft.MinecraftVersion;
 import net.minecraft.SharedConstants;
 import net.minecraft.WorldVersion;
@@ -25,6 +26,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.WeakHashMap;
 import java.util.function.Supplier;
 
@@ -33,6 +35,7 @@ public class MonitorUtil {
     private static FieldAccessor<double[]> recentTps;
     private static DedicatedServer con;
     private static FieldAccessor<ChunkProviderServer> chunkProvider;
+    private static FieldAccessor<RegionizedPlayerChunkLoader> regionChunkLoader;
     private static FieldAccessor<PlayerChunkMap> playerChunkMap;
     private static FieldAccessor<Integer> viewDistance;
     private static FieldAccessor<PathfinderGoalSelector>[] pathfinderGoalSelectors;
@@ -56,7 +59,9 @@ public class MonitorUtil {
             recentTps = new FieldAccessor<>(MinecraftServer.class.getDeclaredField("recentTps"));
             chunkProvider = new FieldAccessor<>(NMSUtils.getFieldFormType(WorldServer.class,ChunkProviderServer.class));
             playerChunkMap = new FieldAccessor<>(NMSUtils.getFieldFormType(ChunkProviderServer.class,PlayerChunkMap.class));
-            viewDistance = new FieldAccessor<>(NMSUtils.getFieldFormStructure(PlayerChunkMap.class,int.class,PlayerAreaMap.class)[0]);
+            viewDistance = new FieldAccessor<>(NMSUtils.getFieldFormStructure(PlayerChunkMap.class,Queue.class,int.class)[1]);
+            regionChunkLoader = new FieldAccessor<>(NMSUtils.getFieldFormType(WorldServer.class,RegionizedPlayerChunkLoader.class));
+
             ArrayList<FieldAccessor<PathfinderGoalSelector>> list = new ArrayList<>(3);
             for (Field field : EntityInsentient.class.getFields()) {
                 if (field.getType().equals(PathfinderGoalSelector.class)){
@@ -116,8 +121,8 @@ public class MonitorUtil {
         if (world == null) return 0;
         try{
             WorldServer ws = nmsWorldField.get(world);
-            ChunkProviderServer cps = (ChunkProviderServer) chunkProvider.get(ws);
-            PlayerChunkMap pcm = (PlayerChunkMap) playerChunkMap.get(cps);
+            ChunkProviderServer cps = chunkProvider.get(ws);
+            PlayerChunkMap pcm = playerChunkMap.get(cps);
             //m = pcm.getClass().getMethod("")
             return viewDistance.get(pcm);
         }catch (Exception e){
@@ -125,13 +130,15 @@ public class MonitorUtil {
         }
     }
 
-    public static void setDistance(final org.bukkit.World world,final int viewDistance) {
+    public static void setDistance(final org.bukkit.World world,int viewDistance) {
         if (world == null) return;
         try{
+            viewDistance = Math.max(2,Math.min(48,viewDistance)); //限制范围2 - 48
             var ws = nmsWorldField.get(world);
-            ChunkProviderServer cps = (ChunkProviderServer) chunkProvider.get(ws);
-            PlayerChunkMap pcm = (PlayerChunkMap) playerChunkMap.get(cps);
+            ChunkProviderServer cps = chunkProvider.get(ws);
+            PlayerChunkMap pcm = playerChunkMap.get(cps);
             MonitorUtil.viewDistance.set(pcm,viewDistance);
+            regionChunkLoader.get(ws).setLoadDistance(viewDistance + 1);
         }catch (Exception e){
             e.printStackTrace();
         }
