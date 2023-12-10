@@ -112,6 +112,8 @@ public class MonitorUtil {
 
     public static void setDistance(final Player player,final int d) {
         player.setViewDistance(d);
+        player.setSendViewDistance(d);
+
 //        cp.getClientViewDistance();
 //        EntityPlayer nmsplayer = cp.getHandle();
 //        nmsplayer.clientViewDistance = d;
@@ -138,7 +140,9 @@ public class MonitorUtil {
             ChunkProviderServer cps = chunkProvider.get(ws);
             PlayerChunkMap pcm = playerChunkMap.get(cps);
             MonitorUtil.viewDistance.set(pcm,viewDistance);
-            regionChunkLoader.get(ws).setLoadDistance(viewDistance + 1);
+            final RegionizedPlayerChunkLoader chunkLoader = regionChunkLoader.get(ws);
+            chunkLoader.setSendDistance(viewDistance);
+            chunkLoader.setLoadDistance(viewDistance + 1);
         }catch (Exception e){
             e.printStackTrace();
         }
