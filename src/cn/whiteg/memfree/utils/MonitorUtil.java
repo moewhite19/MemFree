@@ -155,6 +155,7 @@ public class MonitorUtil {
     }
 
     public static void clearEntityAI(Mob entity) {
+        if (isNoAI(entity)) return;
         EntityInsentient ne = (EntityInsentient) getNmsEntity(entity);
         if (ne == null) return;
 //        PathfinderGoalSelector p = new PathfinderGoalSelector(null);
@@ -163,6 +164,15 @@ public class MonitorUtil {
         for (FieldAccessor<PathfinderGoalSelector> pathfinderGoalSelector : pathfinderGoalSelectors) {
             pathfinderGoalSelector.set(ne,goalSelector);
         }
+    }
+
+    public static boolean isNoAI(Mob entity) {
+        EntityInsentient ne = (EntityInsentient) getNmsEntity(entity);
+        if (ne != null) for (FieldAccessor<PathfinderGoalSelector> pathfinderGoalSelector : pathfinderGoalSelectors) {
+            final PathfinderGoalSelector goalSelector = pathfinderGoalSelector.get(ne);
+            return goalSelector instanceof NoTickPathfinder;
+        }
+        return false;
     }
 
     public static PathfinderGoalSelector createPathfinderGoalSelector(EntityInsentient ne) {
@@ -179,7 +189,7 @@ public class MonitorUtil {
             if (mp == null){
                 return null;
             }
-            return new PathfinderGoalSelector(supplier);
+            return new NoTickPathfinder(supplier);
         });
     }
 
@@ -190,5 +200,16 @@ public class MonitorUtil {
 
     public static Entity getNmsEntity(org.bukkit.entity.Entity entity) {
         return nmsEntityField.get(entity);
+    }
+
+    public static class NoTickPathfinder extends PathfinderGoalSelector {
+        public NoTickPathfinder(Supplier<GameProfilerFiller> supplier) {
+            super(supplier);
+        }
+
+        @Override
+        // public void doTick()
+        public void a() {
+        }
     }
 }
