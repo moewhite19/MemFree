@@ -257,6 +257,10 @@ public class MFRunnable implements Listener {
                     bar.setTitle(getMsg());
                 } else if (dny < time){
                     bar = Bukkit.createBossBar(getMsg(),BarColor.WHITE,BarStyle.SOLID);
+                    for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                        bar.addPlayer(onlinePlayer);
+                    }
+                    bar.setVisible(true);
                     //noinspection deprecation
                     Bukkit.broadcastMessage("服务器将会在" + CommonUtils.tanMintoh(time) + "后重启");
                 }
