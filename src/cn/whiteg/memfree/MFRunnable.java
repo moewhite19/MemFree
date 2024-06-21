@@ -35,7 +35,6 @@ public class MFRunnable implements Listener {
     public volatile float tps = 20;
     public short warin = 0;
     Iterator<? extends Player> playersIt = Bukkit.getOnlinePlayers().iterator();
-    boolean taskIsDone = false;
     private BukkitTask bukkitTask;
     private long lastUpdateTime = System.currentTimeMillis();
     private long lastGcTime;
@@ -200,12 +199,6 @@ public class MFRunnable implements Listener {
 
         lastChunkLoad = chunkLoad.getAndSet(0);
         lastGenerate = chunkGenerate.getAndSet(0);
-
-        //通知协线程
-        synchronized (this) {
-            taskIsDone = true;
-            this.notify();
-        }
     }
 
     @EventHandler
@@ -264,10 +257,8 @@ public class MFRunnable implements Listener {
                     bar.setTitle(getMsg());
                 } else if (dny < time){
                     bar = Bukkit.createBossBar(getMsg(),BarColor.WHITE,BarStyle.SOLID);
-                    for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                        bar.addPlayer(onlinePlayer);
-                        onlinePlayer.sendMessage("服务器将会在" + CommonUtils.tanMintoh(time) + "后重启");
-                    }
+                    //noinspection deprecation
+                    Bukkit.broadcastMessage("服务器将会在" + CommonUtils.tanMintoh(time) + "后重启");
                 }
             }
         }
@@ -305,19 +296,13 @@ public class MFRunnable implements Listener {
             while (isRun) {
                 try{
                     synchronized (this) {
-                        taskIsDone = false;
-                        this.wait(interval * 2);
+                        wait(2000);
                     }
+
                     long now = System.currentTimeMillis(); //当前时间
-                    //当服务器线程堵塞时
-                    if (now - lastUpdateTime > Setting.shutdownHookWaitTime){
-                        MemFree.logger.warning("线程堵塞超过" + CommonUtils.tanMintoh(Setting.shutdownHookWaitTime));
-                        if (Setting.AutoRestart){
-                            MemFree.logger.warning("强制终止进程");
-                            MonitorUtil.killMe();
-                        }
-                    }
-                    if (!taskIsDone){
+                    //检查服务器主线程运行状态
+                    final long delay = now - lastUpdateTime;
+                    if (delay > interval * 2){
                         warin++;
                         if (warin > Setting.Max_Warin){
                             if (Setting.AutoRestart) denyShwtdown();
@@ -326,6 +311,14 @@ public class MFRunnable implements Listener {
                         if (Setting.DEBUG) MemFree.logger.warning("卡顿警告");
                         tps = 0;
                         continue;
+                    }
+
+                    if (delay > Setting.shutdownHookWaitTime){
+                        MemFree.logger.warning("线程堵塞超过" + CommonUtils.tanMintoh(Setting.shutdownHookWaitTime));
+                        if (Setting.AutoRestart){
+                            MemFree.logger.warning("强制终止进程");
+                            MonitorUtil.killMe();
+                        }
                     }
                     if (mem < Setting.minfree){
                         if (Setting.DEBUG) MemFree.logger.warning("内存警告");
@@ -361,8 +354,6 @@ public class MFRunnable implements Listener {
                     //自动清理日志
                     runnable = Setting.autoCleanLog;
                     if (runnable != null) runnable.run();
-
-
                 }catch (Throwable e){
                     MemFree.logger.info("计时器错误" + e.getMessage());
                     e.printStackTrace();

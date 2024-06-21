@@ -1,7 +1,7 @@
 package cn.whiteg.memfree.utils;
 
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -16,8 +16,8 @@ public class NMSUtils {
         }
 
         //如果有父类 检查父类
-        var superClass = clazz.getSuperclass();
-        if (superClass != null) return getFieldFormType(clazz,type);
+        clazz = clazz.getSuperclass();
+        if (clazz != null && !clazz.equals(Object.class)) return getFieldFormType(clazz,type);
         throw new NoSuchFieldException(type.getName());
     }
 
@@ -27,8 +27,8 @@ public class NMSUtils {
             if (declaredField.getAnnotatedType().getType().getTypeName().equals(type)) return declaredField;
         }
         //如果有父类 检查父类
-        var superClass = clazz.getSuperclass();
-        if (superClass != null) return getFieldFormType(clazz,type);
+        clazz = clazz.getSuperclass();
+        if (clazz != null && !clazz.equals(Object.class)) return getFieldFormType(clazz,type);
         throw new NoSuchFieldException(type);
     }
 
@@ -52,13 +52,13 @@ public class NMSUtils {
     }
 
     //根据实体Class获取实体Types
-    public static <T extends Entity> EntityTypes<T> getEntityType(Class<? extends Entity> clazz) {
-        String name = EntityTypes.class.getName().concat("<").concat(clazz.getName()).concat(">");
-        for (Field field : EntityTypes.class.getFields()) {
+    public static <T extends Entity> EntityType<T> getEntityType(Class<? extends Entity> clazz) {
+        String name = EntityType.class.getName().concat("<").concat(clazz.getName()).concat(">");
+        for (Field field : EntityType.class.getFields()) {
             try{
                 if (field.getAnnotatedType().getType().getTypeName().equals(name))
                     //noinspection unchecked
-                    return (EntityTypes<T>) field.get(null);
+                    return (EntityType<T>) field.get(null);
             }catch (IllegalAccessException e){
                 e.printStackTrace();
             }

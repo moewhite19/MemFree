@@ -4,7 +4,7 @@ import cn.whiteg.memfree.utils.CommonUtils;
 import cn.whiteg.memfree.utils.MonitorUtil;
 import cn.whiteg.memfree.utils.NMSUtils;
 import cn.whiteg.memfree.utils.PluginUtil;
-import net.minecraft.MinecraftVersion;
+import net.minecraft.DetectedVersion;
 import net.minecraft.SharedConstants;
 import net.minecraft.WorldVersion;
 import org.bukkit.Bukkit;
