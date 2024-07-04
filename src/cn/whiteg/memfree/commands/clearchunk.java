@@ -139,14 +139,16 @@ public class clearchunk extends HasCommandInterface {
                 int done = 0;
                 long size = 0;
                 int pdone = 0;
-                int psize = 0;
+                long psize = 0;
                 for (File regionFile : fileList) {
                     if (regionFile != null && regionFile.exists()){
                         String name = regionFile.getName();
                         try{
+                            final long rsize = regionFile.length();
                             if (!regionFile.delete()) continue;
                             done++;
-                            size += regionFile.length();
+
+                            size += rsize;
                             File dir = new File(regionFile.getParentFile().getParentFile(),"poi");
                             if (dir.isDirectory()){
                                 File poi = new File(dir,name);
@@ -159,8 +161,9 @@ public class clearchunk extends HasCommandInterface {
                             dir = new File(regionFile.getParentFile().getParentFile(),"entities");
                             if (dir.isDirectory()){
                                 File poi = new File(dir,name);
+                                final long psize1 = poi.length();
                                 if (poi.exists() && poi.delete()){
-                                    psize += poi.length();
+                                    psize += psize1;
                                     pdone++;
                                 }
                             }

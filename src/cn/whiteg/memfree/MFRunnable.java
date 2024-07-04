@@ -247,7 +247,7 @@ public class MFRunnable implements Listener {
             if (dny <= 0){
                 cancel();
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                    onlinePlayer.kickPlayer("§f服务器似乎内存满了,\n请等待1分钟服务器重启完成后再加入服务器. \n§l期待与您再见.");
+                    onlinePlayer.kickPlayer("§f服务器需要重启更新,\n请等待1分钟服务器重启完成后再加入服务器. \n§l期待与您再见!");
                 }
                 onRestart();
                 stop();
