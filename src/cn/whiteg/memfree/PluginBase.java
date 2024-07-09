@@ -11,6 +11,7 @@ public class PluginBase extends JavaPlugin {
     private final List<Listener> listenerList = new LinkedList<>();
 
     public void regListener(Listener listener) {
+        if (listenerList.contains(listener)) return;
         listenerList.add(listener);
         Bukkit.getPluginManager().registerEvents(listener,this);
     }
