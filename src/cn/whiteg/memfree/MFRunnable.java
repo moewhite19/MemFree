@@ -120,7 +120,7 @@ public class MFRunnable implements Listener {
         bukkitTask = null;
         mfThread = null;
         isRun = false;
-        HandlerList.unregisterAll(this);
+        plugin.unregListener(this);
         logger.info("已关闭计时器");
     }
 
